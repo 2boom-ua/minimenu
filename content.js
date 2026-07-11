@@ -254,7 +254,7 @@ function resetPopupTimer() {
   if (popup) {
     popupTimer = setTimeout(function() {
       removePopup();
-    }, 7000);
+    }, 10000);
   }
 }
 

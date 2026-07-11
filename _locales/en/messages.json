@@ -1,0 +1,20 @@
+{
+  "search": {
+    "message": "Search"
+  },
+  "copy": {
+    "message": "Copy"
+  },
+  "copy_plain": {
+    "message": "Plain copy"
+  },
+  "open_link": {
+    "message": "Open link"
+  },
+  "call_number": {
+    "message": "Call number"
+  },
+  "send_email": {
+    "message": "Send email"
+  }
+}

@@ -1,0 +1,116 @@
+/* Text Mini Menu */
+/* Copyright 2boom, 2026 */
+
+:root {
+  --bg-popup: #ffffff;
+  --border-popup: #d1d5db;
+  --bg-btn-hover: #f3f4f6;
+  --icon-color: #444444;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-popup: #1f1f1f;
+    --border-popup: #4b4b4b;
+    --bg-btn-hover: #333333;
+    --icon-color: #cccccc;
+  }
+}
+
+.text-mini-menu {
+  position: absolute !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  background: var(--bg-popup) !important;
+  border: 1px solid var(--border-popup) !important;
+  border-radius: 8px !important;
+  padding: 6px 4px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  z-index: 2147483647 !important;
+  pointer-events: auto !important;
+  transition: background 0.2s, border-color 0.2s !important;
+}
+
+.menu-state {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+}
+
+.default-state {
+  display: flex !important;
+}
+
+.hover-state {
+  display: none !important;
+}
+
+.text-mini-menu:hover .default-state {
+  display: none !important;
+}
+
+.text-mini-menu:hover .hover-state {
+  display: flex !important;
+}
+
+.menu-btn {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 4px !important;
+  padding: 4px 6px !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  transition: background 0.15s !important;
+  gap: 10px !important;
+  min-height: auto !important;
+  min-width: auto !important;
+  width: auto !important;
+  height: auto !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  outline: none !important;
+  height: 28px !important;
+}
+
+.menu-btn:hover {
+  background: var(--bg-btn-hover) !important;
+}
+
+.menu-icon {
+  display: inline-block !important;
+  width: 18px !important;
+  height: 18px !important;
+  background-size: contain !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  flex-shrink: 0 !important;
+  filter: invert(34%) sepia(81%) saturate(9%) hue-rotate(329deg) brightness(99%) contrast(94%) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .menu-icon {
+    filter: invert(87%) sepia(1%) saturate(0%) hue-rotate(89deg) brightness(96%) contrast(89%) !important;
+  }
+}
+
+.btn-label {
+  display: inline !important;
+  font-size: 13px !important;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+  font-weight: 400 !important;
+  color: var(--icon-color) !important;
+  white-space: nowrap !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  line-height: 1.0 !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+}

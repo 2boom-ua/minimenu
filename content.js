@@ -8,8 +8,6 @@ let ignoreNextMouseUp = false;
 let lastSelectedText = '';
 let popupTimer = null;
 
-console.log('[MiniMenu] Extension loaded');
-
 function isContextValid() {
   try {
     return !!chrome.runtime.id;
@@ -87,7 +85,6 @@ function getIconUrl(iconName) {
   try {
     return chrome.runtime.getURL(iconName);
   } catch (e) {
-    console.warn('[MiniMenu] Extension context invalidated');
     removePopup();
     return '';
   }
@@ -236,7 +233,7 @@ function handleSearchAction() {
     action: 'search_text',
     text: selectedText
   }, function(response) {
-    console.log('[MiniMenu] Search message sent');
+    // Message sent
   });
 
   removePopup();
@@ -244,7 +241,6 @@ function handleSearchAction() {
 
 function destroyPopup() {
   if (popup) {
-    console.log('[MiniMenu] destroyPopup - removing popup');
     popup.remove();
     popup = null;
   }
@@ -257,7 +253,6 @@ function resetPopupTimer() {
   }
   if (popup) {
     popupTimer = setTimeout(function() {
-      console.log('[MiniMenu] Popup idle timeout (7s) - closing');
       removePopup();
     }, 7000);
   }
@@ -265,12 +260,7 @@ function resetPopupTimer() {
 
 function createPopup(event) {
   if (!isContextValid()) return;
-  if (isClosing) {
-    console.log('[MiniMenu] createPopup - isClosing, skipping');
-    return;
-  }
-
-  console.log('[MiniMenu] createPopup - creating new popup for text:', selectedText);
+  if (isClosing) return;
 
   destroyPopup();
   resetPopupTimer();
@@ -282,8 +272,6 @@ function createPopup(event) {
   const isUrl = isURL(selectedText);
   const isPhone = isValidPhone(selectedText);
   const isEmail = isValidEmail(selectedText);
-
-  console.log('[MiniMenu] createPopup - isUrl:', isUrl, 'isPhone:', isPhone, 'isEmail:', isEmail);
 
   const searchLabel = getMessage('search');
   const copyLabel = getMessage('copy');
@@ -498,7 +486,6 @@ function positionPopup() {
 function removePopup() {
   if (isClosing) return;
 
-  console.log('[MiniMenu] removePopup - closing popup');
   isClosing = true;
 
   resetPopupTimer();
@@ -509,12 +496,11 @@ function removePopup() {
   lastSelectedText = '';
 
   setTimeout(function() {
-    console.log('[MiniMenu] removePopup - isClosing reset');
     isClosing = false;
   }, 100);
 }
 
-// ==================== КЛАВІАТУРА ====================
+// ==================== KEYBOARD ====================
 
 function isPrintableKey(e) {
   if (e.ctrlKey || e.altKey || e.metaKey) return false;
@@ -549,40 +535,28 @@ document.addEventListener('keydown', function(e) {
   }
 
   if (isPrintableKey(e)) {
-    console.log('[MiniMenu] keydown - closing popup via keyboard:', e.key);
     e.preventDefault();
     e.stopPropagation();
     removePopup();
   }
 }, true);
 
-// ==================== ОБРОБНИКИ ПОДІЙ МИШІ ====================
+// ==================== MOUSE EVENT HANDLERS ====================
 
 document.addEventListener('mouseup', function(e) {
-  console.log('[MiniMenu] mouseup triggered');
-  
   if (!isContextValid()) return;
 
   if (ignoreNextMouseUp) {
-    console.log('[MiniMenu] mouseup - ignoreNextMouseUp, skipping');
     ignoreNextMouseUp = false;
     return;
   }
 
-  if (isClosing) {
-    console.log('[MiniMenu] mouseup - isClosing, skipping');
-    return;
-  }
+  if (isClosing) return;
 
   const selection = window.getSelection();
   const text = selection ? selection.toString().trim() : '';
 
-  console.log('[MiniMenu] mouseup - text:', text);
-  console.log('[MiniMenu] mouseup - lastSelectedText:', lastSelectedText);
-  console.log('[MiniMenu] mouseup - popup exists:', !!popup);
-
   if (!text) {
-    console.log('[MiniMenu] mouseup - no text, removing popup if exists');
     if (popup) {
       removePopup();
     }
@@ -590,7 +564,6 @@ document.addEventListener('mouseup', function(e) {
   }
 
   if (text === lastSelectedText) {
-    console.log('[MiniMenu] mouseup - same text, updating position');
     if (popup) {
       positionPopup();
       resetPopupTimer();
@@ -598,12 +571,10 @@ document.addEventListener('mouseup', function(e) {
     return;
   }
 
-  console.log('[MiniMenu] mouseup - new text detected, creating popup');
   lastSelectedText = text;
   selectedText = text;
 
   if (popup) {
-    console.log('[MiniMenu] mouseup - popup exists, destroying old one');
     destroyPopup();
   }
 
@@ -611,21 +582,17 @@ document.addEventListener('mouseup', function(e) {
 });
 
 document.addEventListener('mousedown', function(e) {
-  console.log('[MiniMenu] mousedown triggered');
-  
   if (!isContextValid()) return;
 
   const selection = window.getSelection();
   if (selection && !selection.isCollapsed) {
     const text = selection.toString().trim();
     if (text && text === lastSelectedText) {
-      console.log('[MiniMenu] mousedown - click on selected text, keeping popup');
       return;
     }
   }
 
   if (popup && !popup.contains(e.target)) {
-    console.log('[MiniMenu] mousedown - click outside popup, closing');
     ignoreNextMouseUp = true;
     lastSelectedText = '';
     selectedText = '';

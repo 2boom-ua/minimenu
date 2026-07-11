@@ -2,6 +2,7 @@
 # Text Mini Menu
 
 A lightweight Chromium extension that displays a compact context menu when text is selected.
+![Version](https://img.shields.io/badge/version-1.0-green.svg)
 
 ## Features
 

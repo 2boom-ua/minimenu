@@ -7,6 +7,7 @@ let isClosing = false;
 let ignoreNextMouseUp = false;
 let lastSelectedText = '';
 let popupTimer = null;
+let closedByTimer = false;
 
 function isContextValid() {
   try {
@@ -22,58 +23,6 @@ function getMessage(key) {
   } catch (e) {
     return key;
   }
-}
-
-function isURL(text) {
-  if (!text) return false;
-
-  let cleanText = text.trim();
-  cleanText = cleanText.replace(/^["']+|["']+$/g, '');
-  cleanText = cleanText.replace(/^\(+|\)+$/g, '');
-  cleanText = cleanText.replace(/^\[+|\]+$/g, '');
-
-  if (!cleanText) return false;
-  if (/\s/.test(cleanText)) return false;
-
-  const urlPattern = /^(https?:\/\/|www\.)[^\s<>"']+$/i;
-  if (urlPattern.test(cleanText)) {
-    return true;
-  }
-
-  const domainPattern = /^[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}(?:\/.*)?$/;
-  if (domainPattern.test(cleanText) && cleanText.includes('.')) {
-    const parts = cleanText.split('.');
-    if (parts.length >= 2 && parts[parts.length - 1].length >= 2) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-function normalizePhone(text) {
-  return text.replace(/[\s\-\(\)]/g, '');
-}
-
-function isValidPhone(text) {
-  const normalized = normalizePhone(text);
-  const phonePattern = /^\+?\d{7,15}$/;
-  return phonePattern.test(normalized);
-}
-
-function isValidEmail(text) {
-  if (!text) return false;
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailPattern.test(text.trim());
-}
-
-function normalizePlainText(text) {
-  return text
-    .replace(/\r\n/g, ' ')
-    .replace(/\n/g, ' ')
-    .replace(/\t/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
 }
 
 function getIconUrl(iconName) {
@@ -151,71 +100,6 @@ function createLabeledButton(iconPath, altText, labelText) {
   return button;
 }
 
-function getCleanUrl(text) {
-  let url = text.trim();
-  url = url.replace(/^["']+|["']+$/g, '');
-  url = url.replace(/^\(+|\)+$/g, '');
-  url = url.replace(/^\[+|\]+$/g, '');
-
-  if (!/^https?:\/\//i.test(url)) {
-    url = 'https://' + url;
-  }
-
-  return url;
-}
-
-function handlePhoneAction() {
-  if (!selectedText) return;
-
-  const normalized = normalizePhone(selectedText);
-
-  navigator.clipboard.writeText(normalized).then(function() {
-    window.location.href = 'tel:' + normalized;
-    setTimeout(removePopup, 50);
-  }).catch(function() {
-    window.location.href = 'tel:' + normalized;
-    setTimeout(removePopup, 50);
-  });
-}
-
-function handleEmailAction() {
-  if (!selectedText) return;
-
-  const email = selectedText.trim();
-
-  navigator.clipboard.writeText(email).then(function() {
-    window.location.href = 'mailto:' + email;
-    setTimeout(removePopup, 50);
-  }).catch(function() {
-    window.location.href = 'mailto:' + email;
-    setTimeout(removePopup, 50);
-  });
-}
-
-function handleOpenUrlAction() {
-  if (!selectedText) return;
-
-  const url = getCleanUrl(selectedText);
-  window.open(url, '_blank');
-  setTimeout(removePopup, 50);
-}
-
-function handleCopyPlainAction() {
-  if (!selectedText) return;
-
-  const normalized = normalizePlainText(selectedText);
-
-  if (normalized) {
-    navigator.clipboard.writeText(normalized).then(function() {
-      removePopup();
-    }).catch(function() {
-      removePopup();
-    });
-  } else {
-    removePopup();
-  }
-}
-
 function handleCopyAction() {
   if (!selectedText) return;
 
@@ -239,6 +123,24 @@ function handleSearchAction() {
   removePopup();
 }
 
+function handleShareAction() {
+  if (!selectedText) return;
+
+  if (typeof navigator.share === 'function') {
+    navigator.share({
+      title: document.title || ' ',
+      text: selectedText,
+      url: window.location.href
+    }).then(function() {
+      removePopup();
+    }).catch(function(error) {
+      if (error.name !== 'AbortError') {
+        console.error('[MiniMenu] Share error:', error);
+      }
+    });
+  }
+}
+
 function destroyPopup() {
   if (popup) {
     popup.remove();
@@ -253,6 +155,7 @@ function resetPopupTimer() {
   }
   if (popup) {
     popupTimer = setTimeout(function() {
+      closedByTimer = true;
       removePopup();
     }, 10000);
   }
@@ -262,6 +165,8 @@ function createPopup(event) {
   if (!isContextValid()) return;
   if (isClosing) return;
 
+  closedByTimer = false;
+
   destroyPopup();
   resetPopupTimer();
 
@@ -269,16 +174,9 @@ function createPopup(event) {
   popup.id = 'text-mini-menu';
   popup.className = 'text-mini-menu';
 
-  const isUrl = isURL(selectedText);
-  const isPhone = isValidPhone(selectedText);
-  const isEmail = isValidEmail(selectedText);
-
   const searchLabel = getMessage('search');
   const copyLabel = getMessage('copy');
-  const copyPlainLabel = getMessage('copy_plain');
-  const openLinkLabel = getMessage('open_link');
-  const callNumberLabel = getMessage('call_number');
-  const sendEmailLabel = getMessage('send_email') || 'Send email';
+  const shareLabel = getMessage('share') || 'Share';
 
   const defaultState = document.createElement('div');
   defaultState.className = 'menu-state default-state';
@@ -286,49 +184,21 @@ function createPopup(event) {
   const hoverState = document.createElement('div');
   hoverState.className = 'menu-state hover-state';
 
-  let callBtnDefault = null;
-  let emailBtnDefault = null;
-  let openBtnDefault = null;
+  let shareBtnDefault = null;
+  let shareBtnHover = null;
+  if (typeof navigator.share === 'function') {
+    shareBtnDefault = createIconButton('icons/share.svg', shareLabel);
+    defaultState.appendChild(shareBtnDefault);
 
-  let callBtnHover = null;
-  let emailBtnHover = null;
-  let openBtnHover = null;
-
-  if (isPhone) {
-    callBtnDefault = createIconButton('icons/phone.svg', callNumberLabel);
-    defaultState.appendChild(callBtnDefault);
-
-    callBtnHover = createLabeledButton('icons/phone.svg', callNumberLabel, callNumberLabel);
-    hoverState.appendChild(callBtnHover);
+    shareBtnHover = createLabeledButton('icons/share.svg', shareLabel, shareLabel);
+    hoverState.appendChild(shareBtnHover);
   }
-
-  if (isEmail) {
-    emailBtnDefault = createIconButton('icons/email.svg', sendEmailLabel);
-    defaultState.appendChild(emailBtnDefault);
-
-    emailBtnHover = createLabeledButton('icons/email.svg', sendEmailLabel, sendEmailLabel);
-    hoverState.appendChild(emailBtnHover);
-  }
-
-  if (isUrl) {
-    openBtnDefault = createIconButton('icons/link.svg', openLinkLabel);
-    defaultState.appendChild(openBtnDefault);
-
-    openBtnHover = createLabeledButton('icons/link.svg', openLinkLabel, openLinkLabel);
-    hoverState.appendChild(openBtnHover);
-  }
-
-  const copyPlainBtnDefault = createIconButton('icons/plain.svg', copyPlainLabel);
-  defaultState.appendChild(copyPlainBtnDefault);
 
   const copyBtnDefault = createIconButton('icons/copy.svg', copyLabel);
   defaultState.appendChild(copyBtnDefault);
 
   const searchBtnDefault = createIconButton('icons/search.svg', searchLabel);
   defaultState.appendChild(searchBtnDefault);
-
-  const copyPlainBtnHover = createLabeledButton('icons/plain.svg', copyPlainLabel, copyPlainLabel);
-  hoverState.appendChild(copyPlainBtnHover);
 
   const copyBtnHover = createLabeledButton('icons/copy.svg', copyLabel, copyLabel);
   hoverState.appendChild(copyBtnHover);
@@ -339,31 +209,12 @@ function createPopup(event) {
   popup.appendChild(defaultState);
   popup.appendChild(hoverState);
 
-  if (isPhone && callBtnDefault) {
-    callBtnDefault.addEventListener('click', function(e) {
+  if (shareBtnDefault) {
+    shareBtnDefault.addEventListener('click', function(e) {
       e.stopPropagation();
-      handlePhoneAction();
+      handleShareAction();
     });
   }
-
-  if (isEmail && emailBtnDefault) {
-    emailBtnDefault.addEventListener('click', function(e) {
-      e.stopPropagation();
-      handleEmailAction();
-    });
-  }
-
-  if (isUrl && openBtnDefault) {
-    openBtnDefault.addEventListener('click', function(e) {
-      e.stopPropagation();
-      handleOpenUrlAction();
-    });
-  }
-
-  copyPlainBtnDefault.addEventListener('click', function(e) {
-    e.stopPropagation();
-    handleCopyPlainAction();
-  });
 
   copyBtnDefault.addEventListener('click', function(e) {
     e.stopPropagation();
@@ -375,31 +226,12 @@ function createPopup(event) {
     handleSearchAction();
   });
 
-  if (isPhone && callBtnHover) {
-    callBtnHover.addEventListener('click', function(e) {
+  if (shareBtnHover) {
+    shareBtnHover.addEventListener('click', function(e) {
       e.stopPropagation();
-      handlePhoneAction();
+      handleShareAction();
     });
   }
-
-  if (isEmail && emailBtnHover) {
-    emailBtnHover.addEventListener('click', function(e) {
-      e.stopPropagation();
-      handleEmailAction();
-    });
-  }
-
-  if (isUrl && openBtnHover) {
-    openBtnHover.addEventListener('click', function(e) {
-      e.stopPropagation();
-      handleOpenUrlAction();
-    });
-  }
-
-  copyPlainBtnHover.addEventListener('click', function(e) {
-    e.stopPropagation();
-    handleCopyPlainAction();
-  });
 
   copyBtnHover.addEventListener('click', function(e) {
     e.stopPropagation();
@@ -462,21 +294,30 @@ function positionPopup() {
 
     const popupHeight = popupRect.height;
     const gap = 5;
-    const cursorY = rect.top;
-
+    const selectionTop = rect.top;
+    
     let top = topY;
-
-    if (cursorY - popupHeight - gap > 0) {
-      top = topY - popupHeight - gap;
+    
+    if (selectionTop - popupHeight - gap > 0) {
+    top = topY - popupHeight - gap;
     } else {
-      top = topY + rect.height + gap;
+    top = topY + rect.height + gap;
     }
 
     if (top < 0) {
       top = 10;
     }
 
-    const left = centerX - popupRect.width / 2;
+    const viewportWidth = window.innerWidth;
+    const padding = 5;
+    let left = centerX - popupRect.width / 2;
+
+    if (left < padding) {
+      left = padding;
+    }
+    if (left + popupRect.width > viewportWidth - padding) {
+      left = viewportWidth - popupRect.width - padding;
+    }
 
     popup.style.left = left + 'px';
     popup.style.top = top + 'px';
@@ -488,7 +329,10 @@ function removePopup() {
 
   isClosing = true;
 
-  resetPopupTimer();
+  if (popupTimer) {
+    clearTimeout(popupTimer);
+    popupTimer = null;
+  }
 
   destroyPopup();
 
@@ -496,11 +340,10 @@ function removePopup() {
   lastSelectedText = '';
 
   setTimeout(function() {
+    closedByTimer = false;
     isClosing = false;
   }, 100);
 }
-
-// ==================== KEYBOARD ====================
 
 function isPrintableKey(e) {
   if (e.ctrlKey || e.altKey || e.metaKey) return false;
@@ -541,8 +384,6 @@ document.addEventListener('keydown', function(e) {
   }
 }, true);
 
-// ==================== MOUSE EVENT HANDLERS ====================
-
 document.addEventListener('mouseup', function(e) {
   if (!isContextValid()) return;
 
@@ -552,6 +393,17 @@ document.addEventListener('mouseup', function(e) {
   }
 
   if (isClosing) return;
+
+  if (closedByTimer) {
+    const selection = window.getSelection();
+    if (selection) {
+      selection.removeAllRanges();
+    }
+    if (popup) {
+      removePopup();
+    }
+    return;
+  }
 
   const selection = window.getSelection();
   const text = selection ? selection.toString().trim() : '';
@@ -596,6 +448,7 @@ document.addEventListener('mousedown', function(e) {
     ignoreNextMouseUp = true;
     lastSelectedText = '';
     selectedText = '';
+    closedByTimer = false;
     removePopup();
   }
 });

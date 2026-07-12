@@ -5,16 +5,7 @@
   "copy": {
     "message": "Копіювати"
   },
-  "copy_plain": {
-    "message": "Копіювати текст"
-  },
-  "open_link": {
-    "message": "Відкрити посилання"
-  },
-  "call_number": {
-    "message": "Зателефонувати"
-  },
-  "send_email": {
-    "message": "Написати листа"
+  "share": {
+    "message": "Поділитися"
   }
 }

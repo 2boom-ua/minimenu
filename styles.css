@@ -64,7 +64,7 @@
   align-items: center !important;
   justify-content: flex-start !important;
   transition: background 0.15s !important;
-  gap: 10px !important;
+  gap: 12px !important;
   min-height: auto !important;
   min-width: auto !important;
   width: auto !important;
@@ -99,8 +99,8 @@
 
 .btn-label {
   display: inline !important;
-  font-size: 13px !important;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+  font-size: 13.5px !important;
+  font-family: "Segoe UI Variable", "Segoe UI", sans-serif !important;
   font-weight: 400 !important;
   color: var(--icon-color) !important;
   white-space: nowrap !important;

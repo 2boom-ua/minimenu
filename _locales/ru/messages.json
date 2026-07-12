@@ -5,16 +5,7 @@
   "copy": {
     "message": "Копировать"
   },
-  "copy_plain": {
-    "message": "Копировать текст"
-  },
-  "open_link": {
-    "message": "Открыть ссылку"
-  },
-  "call_number": {
-    "message": "Позвонить"
-  },
-  "send_email": {
-    "message": "Написать письмо"
+  "share": {
+    "message": "Поделиться"
   }
 }

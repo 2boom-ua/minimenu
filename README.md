@@ -10,9 +10,7 @@ A lightweight Chromium extension that displays a compact context menu when text 
 - Search selected text using the browser's default search engine.
 - Copy selected text.
 - Copy as plain text (normalized whitespace).
-- Open detected URLs.
-- Call detected phone numbers.
-- Create an email from detected email addresses.
+- Share selected text. 
 - Smart popup positioning.
 - Automatic popup closing.
 - Lightweight and fast.
@@ -21,10 +19,7 @@ A lightweight Chromium extension that displays a compact context menu when text 
 
 | Type | Action |
 |------|--------|
-| Text | Search, Copy, Plain Copy |
-| URL | Open Link |
-| Email | Send Email |
-| Phone | Call Number |
+| Text | Search, Copy, Share |
 
 ## Installation
 

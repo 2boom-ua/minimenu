@@ -334,6 +334,12 @@ function removePopup() {
     popupTimer = null;
   }
 
+  // Очищуємо виділення
+  const selection = window.getSelection();
+  if (selection) {
+    selection.removeAllRanges();
+  }
+
   destroyPopup();
 
   selectedText = '';

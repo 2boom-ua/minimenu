@@ -3,13 +3,12 @@
 
 A lightweight Chromium extension that displays a compact context menu when text is selected.
 
-![Version](https://img.shields.io/badge/version-1.0-green.svg)
+![Version](https://img.shields.io/badge/version-1.3-green.svg)
 
 ## Features
 
 - Search selected text using the browser's default search engine.
 - Copy selected text.
-- Copy as plain text (normalized whitespace).
 - Share selected text. 
 - Smart popup positioning.
 - Automatic popup closing.

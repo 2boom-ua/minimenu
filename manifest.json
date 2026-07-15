@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Text Mini Menu",
-  "version": "1.3",
+  "version": "1.4",
   "description": "Show mini menu when selecting text",
   "default_locale": "en",
   "background": { "service_worker": "background.js" },

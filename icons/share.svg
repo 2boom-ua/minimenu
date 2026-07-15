@@ -1,1 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="20" height="20" style="shape-rendering:geometricPrecision;text-rendering:geometricPrecision;image-rendering:optimizeQuality;fill-rule:evenodd;clip-rule:evenodd" viewBox="0 0 0.156 0.156"><g id="Layer_x0020_1"><path d="M0 0h.156v.156H0z" style="fill:none"/><path d="M.031.012h.028q.006 0 .006.006T.06.025H.031a.02.02 0 0 0-.019.017v.079Q.014.137.03.14h.079Q.126.138.127.122V.117q0-.005.006-.006.006 0 .007.005v.005c0 .017-.013.03-.03.031H.031A.03.03 0 0 1 0 .123v-.08C0 .027.013.013.029.012zh.028zm.063.021V.01q0-.005.007-.006l.003.001.001.001.049.047q.004.004.001.008L.154.062.105.109.101.111Q.096.111.095.106L.094.105V.082L.092.083a.1.1 0 0 0-.057.026C.031.113.024.11.025.104Q.033.038.092.033zV.01zM.107.025v.014L.101.045q-.048 0-.06.043L.04.09.043.088A.1.1 0 0 1 .101.07q.005 0 .006.005V.09L.141.057z" style="fill:#212121;fill-rule:nonzero"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+  <circle cx="9" cy="7" r="4"/>
+  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+</svg>

@@ -488,7 +488,7 @@ function positionPopup() {
     if (!popupRect) return;
 
     const popupHeight = popupRect.height;
-    const gap = 5;
+    const gap = 2;
     const selectionTop = rect.top;
     
     let top = topY;
@@ -583,8 +583,46 @@ document.addEventListener('keydown', function(e) {
   }
 }, true);
 
+let clickOnSelectedText = false;
+
+document.addEventListener('mousedown', function(e) {
+  if (!isContextValid()) return;
+
+  const selection = window.getSelection();
+  if (selection && !selection.isCollapsed) {
+    const text = selection.toString().trim();
+    if (text && text === lastSelectedText) {
+      const range = selection.getRangeAt(0);
+      if (range) {
+        const rect = range.getBoundingClientRect();
+        if (e.clientX >= rect.left && e.clientX <= rect.right &&
+            e.clientY >= rect.top && e.clientY <= rect.bottom) {
+          clickOnSelectedText = true;
+        }
+      }
+      return;
+    }
+  }
+
+  if (popup && !popup.contains(e.target)) {
+    ignoreNextMouseUp = true;
+    lastSelectedText = '';
+    selectedText = '';
+    closedByTimer = false;
+    removePopup();
+  }
+});
+
 document.addEventListener('mouseup', function(e) {
   if (!isContextValid()) return;
+
+  if (clickOnSelectedText) {
+    clickOnSelectedText = false;
+    if (popup) {
+      removePopup();
+    }
+    return;
+  }
 
   if (ignoreNextMouseUp) {
     ignoreNextMouseUp = false;
@@ -634,24 +672,4 @@ document.addEventListener('mouseup', function(e) {
   }
 
   createPopup(e);
-});
-
-document.addEventListener('mousedown', function(e) {
-  if (!isContextValid()) return;
-
-  const selection = window.getSelection();
-  if (selection && !selection.isCollapsed) {
-    const text = selection.toString().trim();
-    if (text && text === lastSelectedText) {
-      return;
-    }
-  }
-
-  if (popup && !popup.contains(e.target)) {
-    ignoreNextMouseUp = true;
-    lastSelectedText = '';
-    selectedText = '';
-    closedByTimer = false;
-    removePopup();
-  }
 });

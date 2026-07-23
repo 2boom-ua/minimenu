@@ -1,30 +1,45 @@
 {
   "manifest_version": 3,
   "name": "Text Mini Menu",
-  "version": "1.5",
+  "version": "1.6",
   "description": "Show mini menu when selecting text",
   "default_locale": "en",
-  "background": { "service_worker": "background.js" },
+  "author": "(c) 2boom 2026",
+  "minimum_chrome_version": "114",
+
+  "background": {
+    "service_worker": "background.js"
+  },
+
   "permissions": [
     "search",
+    "clipboardRead",
     "clipboardWrite"
   ],
-  "host_permissions": [
-    "<all_urls>"
-  ],
+
   "icons": {
     "128": "icons/icon-128.png"
   },
-   "web_accessible_resources": [
+
+  "web_accessible_resources": [
     {
-      "resources": ["icons/*"],
-      "matches": ["<all_urls>"]
+      "resources": [
+        "icons/*"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
     }
   ],
+
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["minimenu.js"],
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "minimenu.js"
+      ],
       "run_at": "document_end"
     }
   ]

@@ -20,6 +20,8 @@ let lastPopupPosition = null;
 let lastSelectionRects = null;
 let savedInputElement = null;
 
+let savedMousePosition = null;
+
 function isContextValid() {
   try {
     return !!chrome.runtime.id;
@@ -188,6 +190,11 @@ async function getClipboardText() {
     clipboardCheckTime = now;
     return '';
   }
+}
+
+async function hasClipboardText() {
+  const text = await getClipboardText();
+  return text && text.length > 0;
 }
 
 function handlePasteAction(event) {
@@ -567,6 +574,41 @@ function getSelectionRects() {
 function positionPopup() {
   if (!isContextValid() || !popup) return;
 
+  if (savedMousePosition) {
+    console.log('[MiniMenu] positionPopup - using mouse position');
+    const popupRect = popup.getBoundingClientRect();
+    if (!popupRect) return;
+
+    const popupWidth = popupRect.width;
+    const popupHeight = popupRect.height;
+    const gap = 2;
+    const padding = 5;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    let top = savedMousePosition.y + gap;
+    let left = savedMousePosition.x - popupWidth / 2;
+
+    if (top + popupHeight > viewportHeight) {
+      top = savedMousePosition.y - popupHeight - gap;
+    }
+    if (top < padding) {
+      top = padding;
+    }
+    if (left < padding) {
+      left = padding;
+    }
+    if (left + popupWidth > viewportWidth - padding) {
+      left = viewportWidth - popupWidth - padding;
+    }
+
+    popup.style.left = left + 'px';
+    popup.style.top = top + 'px';
+    popup.style.position = 'fixed';
+    console.log('[MiniMenu] positionPopup - positioned at:', left, top);
+    return;
+  }
+
   const rects = getSelectionRects();
   if (!rects) {
     removePopup();
@@ -807,6 +849,7 @@ function removePopup() {
   lastPopupPosition = null;
   lastSelectionRects = null;
   savedInputElement = null;
+  savedMousePosition = null;
 
   setTimeout(function() {
     closedByTimer = false;
@@ -1018,4 +1061,71 @@ document.addEventListener('mouseup', async function(e) {
   selectedText = text;
 
   await updateSelectionPopup();
+});
+
+document.addEventListener('dblclick', async function(e) {
+  console.log('[MiniMenu] dblclick triggered');
+  if (!isContextValid()) {
+    console.log('[MiniMenu] dblclick - context invalid');
+    return;
+  }
+  if (isClosing) {
+    console.log('[MiniMenu] dblclick - isClosing');
+    return;
+  }
+  if (isCreatingPopup) {
+    console.log('[MiniMenu] dblclick - isCreatingPopup');
+    return;
+  }
+
+  const target = e.target;
+  console.log('[MiniMenu] dblclick - target:', target.tagName, target.className);
+  if (!target) {
+    console.log('[MiniMenu] dblclick - no target');
+    return;
+  }
+
+  const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+  console.log('[MiniMenu] dblclick - isInput:', isInput);
+  if (!isInput) {
+    console.log('[MiniMenu] dblclick - not an input field');
+    return;
+  }
+
+  const selection = window.getSelection();
+  const selText = selection ? selection.toString().trim() : '';
+  console.log('[MiniMenu] dblclick - selText:', selText);
+
+  if (selText && selText.length > 0) {
+    console.log('[MiniMenu] dblclick - has selected text, skipping');
+    return;
+  }
+
+  const hasText = await hasClipboardText();
+  console.log('[MiniMenu] dblclick - hasText:', hasText);
+  if (!hasText) {
+    console.log('[MiniMenu] dblclick - clipboard empty');
+    return;
+  }
+
+  e.preventDefault();
+  console.log('[MiniMenu] dblclick - prevented default');
+
+  savedInputElement = target;
+  console.log('[MiniMenu] dblclick - savedInputElement:', savedInputElement);
+
+  savedMousePosition = { x: e.clientX, y: e.clientY };
+  console.log('[MiniMenu] dblclick - savedMousePosition:', savedMousePosition);
+
+  lastSelectedText = '';
+  selectedText = '';
+
+  if (popup) {
+    console.log('[MiniMenu] dblclick - destroying existing popup');
+    destroyPopup();
+  }
+
+  console.log('[MiniMenu] dblclick - creating popup');
+  await createPopup();
+  console.log('[MiniMenu] dblclick - popup created');
 });

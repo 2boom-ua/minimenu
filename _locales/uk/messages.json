@@ -1,3 +1,4 @@
+// _locales/uk/messages.json
 {
   "search": {
     "message": "Пошук"
@@ -7,5 +8,11 @@
   },
   "share": {
     "message": "Поділитися"
+  },
+  "paste": {
+    "message": "Вставити"
+  },
+  "cut": {
+    "message": "Вирізати"
   }
 }

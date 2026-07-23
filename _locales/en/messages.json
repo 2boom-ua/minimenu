@@ -1,3 +1,4 @@
+// _locales/en/messages.json
 {
   "search": {
     "message": "Search"
@@ -7,5 +8,11 @@
   },
   "share": {
     "message": "Share"
+  },
+  "paste": {
+    "message": "Paste"
+  },
+  "cut": {
+    "message": "Cut"
   }
 }

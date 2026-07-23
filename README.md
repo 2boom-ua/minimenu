@@ -3,7 +3,7 @@
 
 A lightweight Chromium extension that displays a compact context menu when text is selected.
 
-![Version](https://img.shields.io/badge/version-1.5-green.svg)
+![Version](https://img.shields.io/badge/version-1.6-green.svg)
 
 ## Features
 

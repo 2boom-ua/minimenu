@@ -50,6 +50,7 @@ background.js
 minimenu.js
 manifest.json
 icons/
+_locales/
 ```
 
 ## Browser compatibility

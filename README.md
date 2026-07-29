@@ -28,6 +28,11 @@ A lightweight Chromium extension that displays a compact context menu when text 
 
 ## Installation
 
+### From Chrome Web Store
+[![Available in the Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-Install-blue?logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/text-mini-menu/gealibgfjafhpednkbekefbhomkhdhfi)
+
+### Manual Installation (Developer Mode)
+
 1. Download or clone the repository.
 2. Open `chrome://extensions/` or `edge://extensions/`.
 3. Enable **Developer mode**.

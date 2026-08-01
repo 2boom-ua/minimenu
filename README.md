@@ -1,3 +1,6 @@
+<div align="center">  
+    <img src="https://github.com/2boom-ua/minimenu/blob/main/minimenu.jpg?raw=true" alt="" width="320" height="200">
+</div>
 
 # Text Mini Menu
 

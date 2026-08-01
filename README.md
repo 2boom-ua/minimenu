@@ -1,12 +1,13 @@
-<div align="center">  
-    <img src="https://github.com/2boom-ua/minimenu/blob/main/minimenu.jpg?raw=true" alt="" width="320" height="200">
-</div>
 
 # Text Mini Menu
 
 A lightweight Chromium extension that displays a compact context menu when text is selected.
 
 ![Version](https://img.shields.io/badge/version-1.7-green.svg)
+
+<div align="center">  
+    <img src="https://github.com/2boom-ua/minimenu/blob/main/minimenu.jpg?raw=true" alt="" width="320" height="200">
+</div>
 
 ## Features
 

@@ -858,6 +858,7 @@ function removePopup() {
 }
 
 function isPrintableKey(e) {
+  if (!e || !e.key) return false;
   if (e.ctrlKey || e.altKey || e.metaKey) return false;
   if (e.key === 'Shift' || e.key === 'Control' || e.key === 'Alt' || e.key === 'Meta') return false;
   if (e.key === 'Escape' || e.key === 'Tab') return true;

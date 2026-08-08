@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Text Mini Menu",
-  "version": "1.7",
+  "version": "1.9",
   "description": "Show mini menu when selecting text",
   "default_locale": "en",
   "author": "(c) 2boom 2026",
@@ -10,11 +10,13 @@
   "background": {
     "service_worker": "background.js"
   },
-
+  
   "permissions": [
     "search",
     "clipboardRead",
-    "clipboardWrite"
+    "clipboardWrite",
+    "storage",
+    "contextMenus"
   ],
 
   "icons": {
@@ -40,7 +42,8 @@
       "js": [
         "minimenu.js"
       ],
-      "run_at": "document_end"
+      "run_at": "document_end",
+      "all_frames": true
     }
   ]
 }

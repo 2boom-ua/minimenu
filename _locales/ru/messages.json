@@ -13,5 +13,11 @@
   },
   "cut": {
     "message": "Вырезать"
+  },
+  "enable": {
+    "message": "Включить"
+  },
+  "disable": {
+    "message": "Отключить"
   }
 }

@@ -13,5 +13,11 @@
   },
   "cut": {
     "message": "Cut"
+  },
+  "enable": {
+    "message": "Enable"
+  },
+  "disable": {
+    "message": "Disable"
   }
 }

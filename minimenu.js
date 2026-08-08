@@ -22,12 +22,104 @@ let savedInputElement = null;
 
 let savedMousePosition = null;
 
+// Site disable state
+let isSiteDisabledCache = false;
+let siteDisabledCheckTime = 0;
+const SITE_DISABLED_CACHE_MS = 500;
+const STORAGE_KEY = 'disabledSites';
+
 function isContextValid() {
   try {
     return !!chrome.runtime.id;
   } catch (e) {
     return false;
   }
+}
+
+function getCurrentHostname() {
+  try {
+    let hostname = window.location.hostname;
+    if (hostname.startsWith('www.')) {
+      hostname = hostname.substring(4);
+    }
+    return hostname;
+  } catch (e) {
+    return '';
+  }
+}
+
+function getDisabledSitesFromStorage(callback) {
+  chrome.storage.sync.get([STORAGE_KEY], function(result) {
+    if (chrome.runtime.lastError || !result[STORAGE_KEY]) {
+      chrome.storage.local.get([STORAGE_KEY], function(localResult) {
+        if (chrome.runtime.lastError || !localResult[STORAGE_KEY]) {
+          callback([]);
+        } else {
+          callback(localResult[STORAGE_KEY]);
+        }
+      });
+    } else {
+      callback(result[STORAGE_KEY]);
+    }
+  });
+}
+
+function isSiteDisabled() {
+  const hostname = getCurrentHostname();
+  if (!hostname) {
+    return false;
+  }
+  
+  // Force sync check using storage
+  let result = false;
+  try {
+    chrome.storage.sync.get([STORAGE_KEY], function(data) {
+      if (chrome.runtime.lastError || !data[STORAGE_KEY]) {
+        chrome.storage.local.get([STORAGE_KEY], function(localData) {
+          if (!chrome.runtime.lastError && localData[STORAGE_KEY]) {
+            isSiteDisabledCache = localData[STORAGE_KEY].includes(hostname);
+          } else {
+            isSiteDisabledCache = false;
+          }
+          siteDisabledCheckTime = Date.now();
+        });
+      } else {
+        isSiteDisabledCache = data[STORAGE_KEY].includes(hostname);
+        siteDisabledCheckTime = Date.now();
+      }
+    });
+  } catch (e) {
+    return false;
+  }
+  
+  return isSiteDisabledCache;
+}
+
+// Synchronous version for immediate checks (uses cached value)
+function isSiteDisabledSync() {
+  return isSiteDisabledCache;
+}
+
+function checkSiteDisabledAsync(callback) {
+  const hostname = getCurrentHostname();
+  if (!hostname) {
+    callback(false);
+    return;
+  }
+  
+  chrome.storage.sync.get([STORAGE_KEY], function(result) {
+    if (chrome.runtime.lastError || !result[STORAGE_KEY]) {
+      chrome.storage.local.get([STORAGE_KEY], function(localResult) {
+        if (chrome.runtime.lastError || !localResult[STORAGE_KEY]) {
+          callback(false);
+        } else {
+          callback(localResult[STORAGE_KEY].includes(hostname));
+        }
+      });
+    } else {
+      callback(result[STORAGE_KEY].includes(hostname));
+    }
+  });
 }
 
 function getMessage(key) {
@@ -575,7 +667,6 @@ function positionPopup() {
   if (!isContextValid() || !popup) return;
 
   if (savedMousePosition) {
-    console.log('[MiniMenu] positionPopup - using mouse position');
     const popupRect = popup.getBoundingClientRect();
     if (!popupRect) return;
 
@@ -605,7 +696,6 @@ function positionPopup() {
     popup.style.left = left + 'px';
     popup.style.top = top + 'px';
     popup.style.position = 'fixed';
-    console.log('[MiniMenu] positionPopup - positioned at:', left, top);
     return;
   }
 
@@ -648,6 +738,30 @@ function positionPopup() {
 async function updateSelectionPopup() {
   if (isCreatingPopup) return;
   if (!selectedText) return;
+  
+  // Check if site is disabled
+  const hostname = getCurrentHostname();
+  if (hostname) {
+    const disabled = await new Promise(function(resolve) {
+      chrome.storage.sync.get([STORAGE_KEY], function(result) {
+        if (chrome.runtime.lastError || !result[STORAGE_KEY]) {
+          chrome.storage.local.get([STORAGE_KEY], function(localResult) {
+            if (chrome.runtime.lastError || !localResult[STORAGE_KEY]) {
+              resolve(false);
+            } else {
+              resolve(localResult[STORAGE_KEY].includes(hostname));
+            }
+          });
+        } else {
+          resolve(result[STORAGE_KEY].includes(hostname));
+        }
+      });
+    });
+    if (disabled) {
+      if (popup) removePopup();
+      return;
+    }
+  }
 
   isCreatingPopup = true;
 
@@ -664,6 +778,29 @@ async function updateSelectionPopup() {
 async function createPopup(event) {
   if (!isContextValid()) return;
   if (isClosing) return;
+  
+  // Check if site is disabled
+  const hostname = getCurrentHostname();
+  if (hostname) {
+    const disabled = await new Promise(function(resolve) {
+      chrome.storage.sync.get([STORAGE_KEY], function(result) {
+        if (chrome.runtime.lastError || !result[STORAGE_KEY]) {
+          chrome.storage.local.get([STORAGE_KEY], function(localResult) {
+            if (chrome.runtime.lastError || !localResult[STORAGE_KEY]) {
+              resolve(false);
+            } else {
+              resolve(localResult[STORAGE_KEY].includes(hostname));
+            }
+          });
+        } else {
+          resolve(result[STORAGE_KEY].includes(hostname));
+        }
+      });
+    });
+    if (disabled) {
+      return;
+    }
+  }
 
   closedByTimer = false;
 
@@ -996,6 +1133,30 @@ document.addEventListener('selectionchange', function() {
       return;
     }
 
+    // Check if site is disabled
+    const hostname = getCurrentHostname();
+    if (hostname) {
+      const disabled = await new Promise(function(resolve) {
+        chrome.storage.sync.get([STORAGE_KEY], function(result) {
+          if (chrome.runtime.lastError || !result[STORAGE_KEY]) {
+            chrome.storage.local.get([STORAGE_KEY], function(localResult) {
+              if (chrome.runtime.lastError || !localResult[STORAGE_KEY]) {
+                resolve(false);
+              } else {
+                resolve(localResult[STORAGE_KEY].includes(hostname));
+              }
+            });
+          } else {
+            resolve(result[STORAGE_KEY].includes(hostname));
+          }
+        });
+      });
+      if (disabled) {
+        if (popup) removePopup();
+        return;
+      }
+    }
+
     if (text === lastSelectedText) {
       if (popup) {
         positionPopup();
@@ -1058,6 +1219,30 @@ document.addEventListener('mouseup', async function(e) {
     return;
   }
 
+  // Check if site is disabled before showing popup
+  const hostname = getCurrentHostname();
+  if (hostname) {
+    const disabled = await new Promise(function(resolve) {
+      chrome.storage.sync.get([STORAGE_KEY], function(result) {
+        if (chrome.runtime.lastError || !result[STORAGE_KEY]) {
+          chrome.storage.local.get([STORAGE_KEY], function(localResult) {
+            if (chrome.runtime.lastError || !localResult[STORAGE_KEY]) {
+              resolve(false);
+            } else {
+              resolve(localResult[STORAGE_KEY].includes(hostname));
+            }
+          });
+        } else {
+          resolve(result[STORAGE_KEY].includes(hostname));
+        }
+      });
+    });
+    if (disabled) {
+      if (popup) removePopup();
+      return;
+    }
+  }
+
   lastSelectedText = text;
   selectedText = text;
 
@@ -1065,68 +1250,93 @@ document.addEventListener('mouseup', async function(e) {
 });
 
 document.addEventListener('dblclick', async function(e) {
-  console.log('[MiniMenu] dblclick triggered');
   if (!isContextValid()) {
-    console.log('[MiniMenu] dblclick - context invalid');
     return;
   }
   if (isClosing) {
-    console.log('[MiniMenu] dblclick - isClosing');
     return;
   }
   if (isCreatingPopup) {
-    console.log('[MiniMenu] dblclick - isCreatingPopup');
     return;
   }
 
+  // Check if site is disabled
+  const hostname = getCurrentHostname();
+  if (hostname) {
+    const disabled = await new Promise(function(resolve) {
+      chrome.storage.sync.get([STORAGE_KEY], function(result) {
+        if (chrome.runtime.lastError || !result[STORAGE_KEY]) {
+          chrome.storage.local.get([STORAGE_KEY], function(localResult) {
+            if (chrome.runtime.lastError || !localResult[STORAGE_KEY]) {
+              resolve(false);
+            } else {
+              resolve(localResult[STORAGE_KEY].includes(hostname));
+            }
+          });
+        } else {
+          resolve(result[STORAGE_KEY].includes(hostname));
+        }
+      });
+    });
+    if (disabled) {
+      if (popup) removePopup();
+      return;
+    }
+  }
+
   const target = e.target;
-  console.log('[MiniMenu] dblclick - target:', target.tagName, target.className);
   if (!target) {
-    console.log('[MiniMenu] dblclick - no target');
     return;
   }
 
   const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
-  console.log('[MiniMenu] dblclick - isInput:', isInput);
   if (!isInput) {
-    console.log('[MiniMenu] dblclick - not an input field');
     return;
   }
 
   const selection = window.getSelection();
   const selText = selection ? selection.toString().trim() : '';
-  console.log('[MiniMenu] dblclick - selText:', selText);
 
   if (selText && selText.length > 0) {
-    console.log('[MiniMenu] dblclick - has selected text, skipping');
     return;
   }
 
   const hasText = await hasClipboardText();
-  console.log('[MiniMenu] dblclick - hasText:', hasText);
   if (!hasText) {
-    console.log('[MiniMenu] dblclick - clipboard empty');
     return;
   }
 
   e.preventDefault();
-  console.log('[MiniMenu] dblclick - prevented default');
 
   savedInputElement = target;
-  console.log('[MiniMenu] dblclick - savedInputElement:', savedInputElement);
-
   savedMousePosition = { x: e.clientX, y: e.clientY };
-  console.log('[MiniMenu] dblclick - savedMousePosition:', savedMousePosition);
 
   lastSelectedText = '';
   selectedText = '';
 
   if (popup) {
-    console.log('[MiniMenu] dblclick - destroying existing popup');
     destroyPopup();
   }
 
-  console.log('[MiniMenu] dblclick - creating popup');
   await createPopup();
-  console.log('[MiniMenu] dblclick - popup created');
+});
+
+// Listen for storage changes to remove popup if site gets disabled
+chrome.storage.onChanged.addListener(function(changes, namespace) {
+  if (namespace === 'sync' || namespace === 'local') {
+    if (changes[STORAGE_KEY]) {
+      const hostname = getCurrentHostname();
+      if (hostname) {
+        const newSites = changes[STORAGE_KEY].newValue || [];
+        if (newSites.includes(hostname)) {
+          removePopup();
+          isSiteDisabledCache = true;
+          siteDisabledCheckTime = Date.now();
+        } else {
+          isSiteDisabledCache = false;
+          siteDisabledCheckTime = Date.now();
+        }
+      }
+    }
+  }
 });

@@ -13,5 +13,11 @@
   },
   "cut": {
     "message": "Вирізати"
+  },
+  "enable": {
+    "message": "Увімкнути"
+  },
+  "disable": {
+    "message": "Вимкнути"
   }
 }

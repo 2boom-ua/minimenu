@@ -6,7 +6,7 @@
 
 A lightweight Chromium extension that displays a compact context menu when text is selected.
 
-![Version](https://img.shields.io/badge/version-1.7-green.svg)
+![Version](https://img.shields.io/badge/version-1.9-green.svg)
 
 ## Features
 
@@ -19,8 +19,7 @@ A lightweight Chromium extension that displays a compact context menu when text 
 - **Auto-reposition** on scroll and window resize.
 - **Automatic popup closing** after 10 seconds of inactivity.
 - **Theme-aware** light/dark mode support.
-- **Site disable** functionality — disable extension on specific sites via context menu or side panel.
-- **Export/Import** disabled sites list as JSON.
+- **Disable extension on specific domains** — disable extension on specific sites via context menu.
 
 ## Supported content
 
@@ -48,8 +47,7 @@ A lightweight Chromium extension that displays a compact context menu when text 
 - `clipboardWrite`
 - `clipboardRead`
 - `storage`
-- `sidePanel`
-- `<all_urls>`
+- `contextMenus`
 
 ## Project structure
 

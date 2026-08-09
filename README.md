@@ -6,7 +6,7 @@
 
 A lightweight Chromium extension that displays a compact context menu when text is selected.
 
-![Version](https://img.shields.io/badge/version-1.9-green.svg)
+![Version](https://img.shields.io/badge/version-2.0-green.svg)
 
 ## Features
 
@@ -30,8 +30,9 @@ A lightweight Chromium extension that displays a compact context menu when text 
 
 ## Installation
 
-### From Chrome Web Store
+### From Chrome Web Store or Edge Add-ons
 [![Available in the Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-Install-blue?logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/text-mini-menu/gealibgfjafhpednkbekefbhomkhdhfi)
+[![Available in Microsoft Edge Add-ons](https://img.shields.io/badge/Microsoft%20Edge%20Add--ons-Install-0078D7?logo=microsoftedge&logoColor=white)](https://microsoftedge.microsoft.com/addons/detail/text-mini-menu/ijpbfhbbdngpebnhpmdfbiiaoepfdoip)
 
 ### Manual Installation (Developer Mode)
 

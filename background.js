@@ -63,48 +63,71 @@ function saveDisabledSites(sites, callback) {
   });
 }
 
-// Update context menu title for a specific hostname
-function updateMenuTitle(hostname) {
+// Create or update context menu with correct title
+function createOrUpdateMenu(hostname) {
   if (!hostname) {
     getCurrentTabHostname(function(h) {
       if (h) {
-        updateMenuTitleInternal(h);
+        createOrUpdateMenuInternal(h);
       }
     });
     return;
   }
-  updateMenuTitleInternal(hostname);
+  createOrUpdateMenuInternal(hostname);
 }
 
-function updateMenuTitleInternal(hostname) {
+function createOrUpdateMenuInternal(hostname) {
   getDisabledSites(function(sites) {
     const isDisabled = sites && sites.includes(hostname);
     const actionKey = isDisabled ? 'enable' : 'disable';
     const actionText = chrome.i18n.getMessage(actionKey) || (isDisabled ? 'Enable' : 'Disable');
     const title = actionText + ' Text Mini Menu';
     
-    chrome.contextMenus.update(MENU_ID, {
-      title: title
-    }, function() {
+    chrome.contextMenus.remove(MENU_ID, function() {
       if (chrome.runtime.lastError) {
-        // Menu may not exist yet
+        // Menu doesn't exist, ignore
       }
+      chrome.contextMenus.create({
+        id: MENU_ID,
+        title: title,
+        contexts: ['page', 'selection', 'editable', 'frame']
+      }, function() {
+        if (chrome.runtime.lastError) {
+          // Menu may already exist
+        }
+      });
     });
   });
 }
 
-// Create context menu
-function createContextMenu() {
-  const defaultAction = chrome.i18n.getMessage('disable') || 'Disable';
-  chrome.contextMenus.create({
-    id: MENU_ID,
-    title: defaultAction + ' Text Mini Menu',
-    contexts: ['page', 'selection', 'editable', 'frame']
-  }, function() {
-    if (chrome.runtime.lastError) {
-      // Menu may already exist
+// Initialize menu when service worker starts
+function initializeMenu() {
+  getCurrentTabHostname(function(hostname) {
+    if (hostname) {
+      createOrUpdateMenu(hostname);
     } else {
-      updateMenuTitle(null);
+      // Create default menu, then try to update immediately
+      const defaultAction = chrome.i18n.getMessage('disable') || 'Disable';
+      chrome.contextMenus.remove(MENU_ID, function() {
+        if (chrome.runtime.lastError) {
+          // Menu doesn't exist, ignore
+        }
+        chrome.contextMenus.create({
+          id: MENU_ID,
+          title: defaultAction + ' Text Mini Menu',
+          contexts: ['page', 'selection', 'editable', 'frame']
+        }, function() {
+          if (chrome.runtime.lastError) {
+            // Menu may already exist
+          }
+          // Immediately try to update with correct status
+          getCurrentTabHostname(function(h) {
+            if (h) {
+              createOrUpdateMenu(h);
+            }
+          });
+        });
+      });
     }
   });
 }
@@ -130,7 +153,7 @@ function handleMenuClick(info, tab) {
     
     saveDisabledSites(newSites, function() {
       // Update menu title immediately
-      updateMenuTitle(hostname);
+      createOrUpdateMenu(hostname);
     });
   });
 }
@@ -138,9 +161,21 @@ function handleMenuClick(info, tab) {
 // Handle tab updates to refresh menu title
 function handleTabUpdated(tabId, changeInfo, tab) {
   if (changeInfo.status === 'complete' && tab.active) {
-    const hostname = getHostname(tab.url);
+    let url = changeInfo.url || tab.url;
+    if (!url) {
+      chrome.tabs.get(tabId, function(fullTab) {
+        if (fullTab && fullTab.url) {
+          const hostname = getHostname(fullTab.url);
+          if (hostname) {
+            createOrUpdateMenu(hostname);
+          }
+        }
+      });
+      return;
+    }
+    const hostname = getHostname(url);
     if (hostname) {
-      updateMenuTitle(hostname);
+      createOrUpdateMenu(hostname);
     }
   }
 }
@@ -151,7 +186,7 @@ function handleTabActivated(activeInfo) {
     if (tab && tab.url) {
       const hostname = getHostname(tab.url);
       if (hostname) {
-        updateMenuTitle(hostname);
+        createOrUpdateMenu(hostname);
       }
     }
   });
@@ -163,7 +198,7 @@ function handleStorageChanged(changes, namespace) {
     if (changes[STORAGE_KEY]) {
       getCurrentTabHostname(function(hostname) {
         if (hostname) {
-          updateMenuTitle(hostname);
+          createOrUpdateMenu(hostname);
         }
       });
     }
@@ -197,6 +232,12 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
     });
     return true;
   }
+  
+  if (message.action === 'content_script_ready' && message.hostname) {
+    createOrUpdateMenu(message.hostname);
+    sendResponse({ success: true });
+    return true;
+  }
 });
 
 // Register context menu click handler
@@ -204,8 +245,11 @@ chrome.contextMenus.onClicked.addListener(handleMenuClick);
 
 // Initialize
 chrome.runtime.onInstalled.addListener(function() {
-  createContextMenu();
+  initializeMenu();
 });
+
+// Also initialize when service worker starts
+initializeMenu();
 
 // Setup event listeners
 chrome.tabs.onUpdated.addListener(handleTabUpdated);

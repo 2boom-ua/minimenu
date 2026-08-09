@@ -1340,3 +1340,16 @@ chrome.storage.onChanged.addListener(function(changes, namespace) {
     }
   }
 });
+
+// Notify background that content script is ready
+function notifyBackground() {
+  const hostname = getCurrentHostname();
+  if (hostname) {
+    chrome.runtime.sendMessage({
+      action: 'content_script_ready',
+      hostname: hostname
+    });
+  }
+}
+
+setTimeout(notifyBackground, 100);

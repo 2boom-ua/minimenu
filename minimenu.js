@@ -601,9 +601,6 @@ function calculatePopupPosition(rects) {
   const gap = 2;
   const padding = 5;
 
-  const spaceAbove = firstRect.top + scrollY - padding;
-  const fitsAbove = spaceAbove >= popupHeight + gap;
-
   const firstCenterX = firstRect.left + firstRect.width / 2;
   const lastCenterX = lastRect.left + lastRect.width / 2;
   const avgCenterX = (firstCenterX + lastCenterX) / 2;
@@ -611,17 +608,39 @@ function calculatePopupPosition(rects) {
   let top;
   let anchorY;
 
+  // Calculate position above
+  const topAbove = firstRect.top + scrollY - popupHeight - gap;
+  const fitsAbove = topAbove >= scrollY + padding;
+
+  // Calculate position below
+  const topBelow = lastRect.bottom + scrollY + gap;
+  const fitsBelow = topBelow + popupHeight <= viewportHeight + scrollY - padding;
+
+  // Priority: above if fits, else below
   if (fitsAbove) {
-    top = firstRect.top + scrollY - popupHeight - gap;
+    top = topAbove;
     anchorY = firstRect.top + scrollY;
-  } else {
-    top = lastRect.bottom + scrollY + gap;
+  } else if (fitsBelow) {
+    top = topBelow;
     anchorY = lastRect.bottom + scrollY;
+  } else {
+    // Neither fits - choose the one with more space
+    const spaceAbove = firstRect.top + scrollY - padding;
+    const spaceBelow = viewportHeight + scrollY - padding - (lastRect.bottom + scrollY);
+    if (spaceAbove >= spaceBelow) {
+      top = topAbove;
+      anchorY = firstRect.top + scrollY;
+    } else {
+      top = topBelow;
+      anchorY = lastRect.bottom + scrollY;
+    }
   }
 
+  // Final clamp to viewport
   if (top < padding) {
     top = padding;
-  } else if (top + popupHeight > viewportHeight + scrollY - padding) {
+  }
+  if (top + popupHeight > viewportHeight + scrollY - padding) {
     top = viewportHeight + scrollY - popupHeight - padding;
   }
 
@@ -834,17 +853,17 @@ async function createPopup(event) {
     const cutBtnHover = createLabeledButton('icons/cut.svg', cutLabel, cutLabel);
     hoverState.appendChild(cutBtnHover);
 
-    const pasteBtnDefault = createIconButton('icons/paste.svg', pasteLabel);
-    defaultState.appendChild(pasteBtnDefault);
-
-    const pasteBtnHover = createLabeledButton('icons/paste.svg', pasteLabel, pasteLabel);
-    hoverState.appendChild(pasteBtnHover);
-
     const copyBtnDefault = createIconButton('icons/copy.svg', copyLabel);
     defaultState.appendChild(copyBtnDefault);
 
     const copyBtnHover = createLabeledButton('icons/copy.svg', copyLabel, copyLabel);
     hoverState.appendChild(copyBtnHover);
+    
+    const pasteBtnDefault = createIconButton('icons/paste.svg', pasteLabel);
+    defaultState.appendChild(pasteBtnDefault);
+
+    const pasteBtnHover = createLabeledButton('icons/paste.svg', pasteLabel, pasteLabel);
+    hoverState.appendChild(pasteBtnHover);
 
     cutBtnDefault.addEventListener('mousedown', function(e) {
       savedInputElement = document.activeElement;
@@ -1099,8 +1118,10 @@ document.addEventListener('mousedown', function(e) {
 });
 
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Shift' || e.key.startsWith('Arrow')) {
-    isMouseSelection = false;
+  if (e && e.key) {
+    if (e.key === 'Shift' || e.key.startsWith('Arrow')) {
+      isMouseSelection = false;
+    }
   }
 });
 

@@ -1,23 +1,32 @@
 {
+  "menu_title": {
+    "message": "Text Mini Menu"
+  },
+  "disable_site": {
+    "message": "Disable on this site"
+  },
+  "enable_site": {
+    "message": "Enable on this site"
+  },
+  "disable_editable": {
+    "message": "Disable in editable fields"
+  },
+  "enable_editable": {
+    "message": "Enable in editable fields"
+  },
   "search": {
     "message": "Search"
   },
   "copy": {
     "message": "Copy"
   },
-  "share": {
-    "message": "Share"
+  "cut": {
+    "message": "Cut"
   },
   "paste": {
     "message": "Paste"
   },
-  "cut": {
-    "message": "Cut"
-  },
-  "enable": {
-    "message": "Enable"
-  },
-  "disable": {
-    "message": "Disable"
+  "share": {
+    "message": "Share"
   }
 }

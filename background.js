@@ -3,8 +3,11 @@
 
 console.log('[MiniMenu] Background service worker loaded');
 
-const MENU_ID = 'toggle_site';
+const MENU_ID = 'text_mini_menu';
+const MENU_ID_SITE = 'toggle_site';
+const MENU_ID_EDITABLE = 'toggle_editable';
 const STORAGE_KEY = 'disabledSites';
+const EDITABLE_DISABLED_KEY = 'disabledEditableSites';
 
 // Helper: get hostname without www.
 function getHostname(url) {
@@ -48,10 +51,42 @@ function getDisabledSites(callback) {
   });
 }
 
+// Get disabled editable sites from storage
+function getDisabledEditableSites(callback) {
+  chrome.storage.sync.get([EDITABLE_DISABLED_KEY], function(result) {
+    if (chrome.runtime.lastError || !result[EDITABLE_DISABLED_KEY]) {
+      chrome.storage.local.get([EDITABLE_DISABLED_KEY], function(localResult) {
+        if (chrome.runtime.lastError || !localResult[EDITABLE_DISABLED_KEY]) {
+          callback([]);
+        } else {
+          callback(localResult[EDITABLE_DISABLED_KEY]);
+        }
+      });
+    } else {
+      callback(result[EDITABLE_DISABLED_KEY]);
+    }
+  });
+}
+
 // Save disabled sites to storage
 function saveDisabledSites(sites, callback) {
   const data = {};
   data[STORAGE_KEY] = sites;
+  chrome.storage.sync.set(data, function() {
+    if (chrome.runtime.lastError) {
+      chrome.storage.local.set(data, function() {
+        if (callback) callback();
+      });
+    } else {
+      if (callback) callback();
+    }
+  });
+}
+
+// Save disabled editable sites to storage
+function saveDisabledEditableSites(sites, callback) {
+  const data = {};
+  data[EDITABLE_DISABLED_KEY] = sites;
   chrome.storage.sync.set(data, function() {
     if (chrome.runtime.lastError) {
       chrome.storage.local.set(data, function() {
@@ -79,54 +114,131 @@ function createOrUpdateMenu(hostname) {
 function createOrUpdateMenuInternal(hostname) {
   getDisabledSites(function(sites) {
     const isDisabled = sites && sites.includes(hostname);
-    const actionKey = isDisabled ? 'enable' : 'disable';
-    const actionText = chrome.i18n.getMessage(actionKey) || (isDisabled ? 'Enable' : 'Disable');
-    const title = actionText + ' Text Mini Menu';
+    const actionKey = isDisabled ? 'enable_site' : 'disable_site';
+    const title = chrome.i18n.getMessage(actionKey) || (isDisabled ? 'Enable on this site' : 'Disable on this site');
     
-    chrome.contextMenus.remove(MENU_ID, function() {
+    chrome.contextMenus.update(MENU_ID_SITE, {
+      title: title
+    }, function() {
       if (chrome.runtime.lastError) {
-        // Menu doesn't exist, ignore
+        chrome.contextMenus.create({
+          id: MENU_ID_SITE,
+          parentId: MENU_ID,
+          title: title,
+          contexts: ['page', 'selection', 'editable', 'frame']
+        }, function() {
+          if (chrome.runtime.lastError) {
+            // Menu may already exist
+          }
+        });
       }
-      chrome.contextMenus.create({
-        id: MENU_ID,
-        title: title,
-        contexts: ['page', 'selection', 'editable', 'frame']
-      }, function() {
-        if (chrome.runtime.lastError) {
-          // Menu may already exist
-        }
-      });
+    });
+  });
+}
+
+function createOrUpdateEditableMenu(hostname) {
+  if (!hostname) {
+    getCurrentTabHostname(function(h) {
+      if (h) {
+        createOrUpdateEditableMenuInternal(h);
+      }
+    });
+    return;
+  }
+  createOrUpdateEditableMenuInternal(hostname);
+}
+
+function createOrUpdateEditableMenuInternal(hostname) {
+  getDisabledEditableSites(function(sites) {
+    const isDisabled = sites && sites.includes(hostname);
+    const actionKey = isDisabled ? 'enable_editable' : 'disable_editable';
+    const title = chrome.i18n.getMessage(actionKey) || (isDisabled ? 'Enable in editable fields' : 'Disable in editable fields');
+    
+    chrome.contextMenus.update(MENU_ID_EDITABLE, {
+      title: title
+    }, function() {
+      if (chrome.runtime.lastError) {
+        chrome.contextMenus.create({
+          id: MENU_ID_EDITABLE,
+          parentId: MENU_ID,
+          title: title,
+          contexts: ['page', 'selection', 'editable', 'frame']
+        }, function() {
+          if (chrome.runtime.lastError) {
+            // Menu may already exist
+          }
+        });
+      }
     });
   });
 }
 
 // Initialize menu when service worker starts
 function initializeMenu() {
+  const parentTitle = chrome.i18n.getMessage('menu_title') || 'Text Mini Menu';
+  chrome.contextMenus.remove(MENU_ID, function() {
+    if (chrome.runtime.lastError) {
+      // Menu doesn't exist, ignore
+    }
+    chrome.contextMenus.create({
+      id: MENU_ID,
+      title: parentTitle,
+      contexts: ['page', 'selection', 'editable', 'frame']
+    }, function() {
+      if (chrome.runtime.lastError) {
+        // Menu may already exist
+      }
+    });
+  });
+  
   getCurrentTabHostname(function(hostname) {
     if (hostname) {
       createOrUpdateMenu(hostname);
+      createOrUpdateEditableMenu(hostname);
     } else {
-      // Create default menu, then try to update immediately
-      const defaultAction = chrome.i18n.getMessage('disable') || 'Disable';
-      chrome.contextMenus.remove(MENU_ID, function() {
+      const defaultSiteTitle = chrome.i18n.getMessage('disable_site') || 'Disable on this site';
+      
+      chrome.contextMenus.update(MENU_ID_SITE, {
+        title: defaultSiteTitle
+      }, function() {
         if (chrome.runtime.lastError) {
-          // Menu doesn't exist, ignore
-        }
-        chrome.contextMenus.create({
-          id: MENU_ID,
-          title: defaultAction + ' Text Mini Menu',
-          contexts: ['page', 'selection', 'editable', 'frame']
-        }, function() {
-          if (chrome.runtime.lastError) {
-            // Menu may already exist
-          }
-          // Immediately try to update with correct status
-          getCurrentTabHostname(function(h) {
-            if (h) {
-              createOrUpdateMenu(h);
+          chrome.contextMenus.create({
+            id: MENU_ID_SITE,
+            parentId: MENU_ID,
+            title: defaultSiteTitle,
+            contexts: ['page', 'selection', 'editable', 'frame']
+          }, function() {
+            if (chrome.runtime.lastError) {
+              // Menu may already exist
             }
           });
-        });
+        }
+      });
+      
+      const defaultEditableTitle = chrome.i18n.getMessage('disable_editable') || 'Disable in editable fields';
+      
+      chrome.contextMenus.update(MENU_ID_EDITABLE, {
+        title: defaultEditableTitle
+      }, function() {
+        if (chrome.runtime.lastError) {
+          chrome.contextMenus.create({
+            id: MENU_ID_EDITABLE,
+            parentId: MENU_ID,
+            title: defaultEditableTitle,
+            contexts: ['page', 'selection', 'editable', 'frame']
+          }, function() {
+            if (chrome.runtime.lastError) {
+              // Menu may already exist
+            }
+          });
+        }
+      });
+      
+      getCurrentTabHostname(function(h) {
+        if (h) {
+          createOrUpdateMenu(h);
+          createOrUpdateEditableMenu(h);
+        }
       });
     }
   });
@@ -134,28 +246,51 @@ function initializeMenu() {
 
 // Handle context menu click
 function handleMenuClick(info, tab) {
-  if (info.menuItemId !== MENU_ID) return;
-  
-  const hostname = getHostname(tab.url);
-  if (!hostname) {
+  if (info.menuItemId === MENU_ID_SITE) {
+    const hostname = getHostname(tab.url);
+    if (!hostname) {
+      return;
+    }
+    
+    getDisabledSites(function(sites) {
+      let newSites = sites || [];
+      const index = newSites.indexOf(hostname);
+      
+      if (index > -1) {
+        newSites.splice(index, 1);
+      } else {
+        newSites.push(hostname);
+      }
+      
+      saveDisabledSites(newSites, function() {
+        createOrUpdateMenu(hostname);
+      });
+    });
     return;
   }
   
-  getDisabledSites(function(sites) {
-    let newSites = sites || [];
-    const index = newSites.indexOf(hostname);
-    
-    if (index > -1) {
-      newSites.splice(index, 1);
-    } else {
-      newSites.push(hostname);
+  if (info.menuItemId === MENU_ID_EDITABLE) {
+    const hostname = getHostname(tab.url);
+    if (!hostname) {
+      return;
     }
     
-    saveDisabledSites(newSites, function() {
-      // Update menu title immediately
-      createOrUpdateMenu(hostname);
+    getDisabledEditableSites(function(sites) {
+      let newSites = sites || [];
+      const index = newSites.indexOf(hostname);
+      
+      if (index > -1) {
+        newSites.splice(index, 1);
+      } else {
+        newSites.push(hostname);
+      }
+      
+      saveDisabledEditableSites(newSites, function() {
+        createOrUpdateEditableMenu(hostname);
+      });
     });
-  });
+    return;
+  }
 }
 
 // Handle tab updates to refresh menu title
@@ -168,6 +303,7 @@ function handleTabUpdated(tabId, changeInfo, tab) {
           const hostname = getHostname(fullTab.url);
           if (hostname) {
             createOrUpdateMenu(hostname);
+            createOrUpdateEditableMenu(hostname);
           }
         }
       });
@@ -176,6 +312,7 @@ function handleTabUpdated(tabId, changeInfo, tab) {
     const hostname = getHostname(url);
     if (hostname) {
       createOrUpdateMenu(hostname);
+      createOrUpdateEditableMenu(hostname);
     }
   }
 }
@@ -187,6 +324,7 @@ function handleTabActivated(activeInfo) {
       const hostname = getHostname(tab.url);
       if (hostname) {
         createOrUpdateMenu(hostname);
+        createOrUpdateEditableMenu(hostname);
       }
     }
   });
@@ -195,10 +333,11 @@ function handleTabActivated(activeInfo) {
 // Handle storage changes
 function handleStorageChanged(changes, namespace) {
   if (namespace === 'sync' || namespace === 'local') {
-    if (changes[STORAGE_KEY]) {
+    if (changes[STORAGE_KEY] || changes[EDITABLE_DISABLED_KEY]) {
       getCurrentTabHostname(function(hostname) {
         if (hostname) {
           createOrUpdateMenu(hostname);
+          createOrUpdateEditableMenu(hostname);
         }
       });
     }
@@ -233,8 +372,16 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
     return true;
   }
   
+  if (message.action === 'get_disabled_editable_sites') {
+    getDisabledEditableSites(function(sites) {
+      sendResponse({ sites: sites || [] });
+    });
+    return true;
+  }
+  
   if (message.action === 'content_script_ready' && message.hostname) {
     createOrUpdateMenu(message.hostname);
+    createOrUpdateEditableMenu(message.hostname);
     sendResponse({ success: true });
     return true;
   }

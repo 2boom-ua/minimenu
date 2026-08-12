@@ -1,23 +1,32 @@
 {
+  "menu_title": {
+    "message": "Текстове міні-меню"
+  },
+  "disable_site": {
+    "message": "Вимкнути на цьому сайті"
+  },
+  "enable_site": {
+    "message": "Увімкнути на цьому сайті"
+  },
+  "disable_editable": {
+    "message": "Вимкнути в полях вводу"
+  },
+  "enable_editable": {
+    "message": "Увімкнути в полях вводу"
+  },
   "search": {
     "message": "Пошук"
   },
   "copy": {
     "message": "Копіювати"
   },
-  "share": {
-    "message": "Поділитися"
+  "cut": {
+    "message": "Вирізати"
   },
   "paste": {
     "message": "Вставити"
   },
-  "cut": {
-    "message": "Вирізати"
-  },
-  "enable": {
-    "message": "Увімкнути"
-  },
-  "disable": {
-    "message": "Вимкнути"
+  "share": {
+    "message": "Поділитися"
   }
 }

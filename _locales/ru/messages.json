@@ -1,23 +1,32 @@
 {
+  "menu_title": {
+    "message": "Текстовое мини-меню"
+  },
+  "disable_site": {
+    "message": "Отключить на этом сайте"
+  },
+  "enable_site": {
+    "message": "Включить на этом сайте"
+  },
+  "disable_editable": {
+    "message": "Отключить в полях ввода"
+  },
+  "enable_editable": {
+    "message": "Включить в полях ввода"
+  },
   "search": {
     "message": "Поиск"
   },
   "copy": {
     "message": "Копировать"
   },
-  "share": {
-    "message": "Поделиться"
+  "cut": {
+    "message": "Вырезать"
   },
   "paste": {
     "message": "Вставить"
   },
-  "cut": {
-    "message": "Вырезать"
-  },
-  "enable": {
-    "message": "Включить"
-  },
-  "disable": {
-    "message": "Отключить"
+  "share": {
+    "message": "Поделиться"
   }
 }

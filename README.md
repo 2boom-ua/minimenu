@@ -4,7 +4,7 @@
 
 # Text Mini Menu
 
-Quick access to your favorite AI services from a compact browser menu. Frequently used services are automatically moved to the top for faster access.
+A compact menu that appears when you select text on a webpage. It provides quick access to useful text actions without getting in your way.
 
 ![Version](https://img.shields.io/badge/version-2.1-green.svg)
 

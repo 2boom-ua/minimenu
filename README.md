@@ -4,7 +4,7 @@
 
 # Text Mini Menu
 
-A lightweight Chromium extension that displays a compact context menu when text is selected.
+Quick access to your favorite AI services from a compact browser menu. Frequently used services are automatically moved to the top for faster access.
 
 ![Version](https://img.shields.io/badge/version-2.1-green.svg)
 

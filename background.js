@@ -6,8 +6,10 @@ console.log('[MiniMenu] Background service worker loaded');
 const MENU_ID = 'text_mini_menu';
 const MENU_ID_SITE = 'toggle_site';
 const MENU_ID_EDITABLE = 'toggle_editable';
+const MENU_ID_LAYOUT = 'toggle_layout';
 const STORAGE_KEY = 'disabledSites';
 const EDITABLE_DISABLED_KEY = 'disabledEditableSites';
+const LAYOUT_KEY = 'horizontalLayout';
 
 // Helper: get hostname without www.
 function getHostname(url) {
@@ -64,6 +66,38 @@ function getDisabledEditableSites(callback) {
       });
     } else {
       callback(result[EDITABLE_DISABLED_KEY]);
+    }
+  });
+}
+
+// Get layout setting
+function getLayout(callback) {
+  chrome.storage.sync.get([LAYOUT_KEY], function(result) {
+    if (chrome.runtime.lastError || !result[LAYOUT_KEY]) {
+      chrome.storage.local.get([LAYOUT_KEY], function(localResult) {
+        if (chrome.runtime.lastError || !localResult[LAYOUT_KEY]) {
+          callback(false);
+        } else {
+          callback(localResult[LAYOUT_KEY]);
+        }
+      });
+    } else {
+      callback(result[LAYOUT_KEY]);
+    }
+  });
+}
+
+// Save layout setting
+function saveLayout(value, callback) {
+  const data = {};
+  data[LAYOUT_KEY] = value;
+  chrome.storage.sync.set(data, function() {
+    if (chrome.runtime.lastError) {
+      chrome.storage.local.set(data, function() {
+        if (callback) callback();
+      });
+    } else {
+      if (callback) callback();
     }
   });
 }
@@ -173,13 +207,40 @@ function createOrUpdateEditableMenuInternal(hostname) {
   });
 }
 
+function createOrUpdateLayoutMenu() {
+  getLayout(function(isHorizontal) {
+    const actionKey = isHorizontal ? 'switch_vertical' : 'switch_horizontal';
+    const title = chrome.i18n.getMessage(actionKey) || (isHorizontal ? 'Switch to vertical layout' : 'Switch to horizontal layout');
+    
+    chrome.contextMenus.update(MENU_ID_LAYOUT, {
+      title: title
+    }, function() {
+      if (chrome.runtime.lastError) {
+        chrome.contextMenus.create({
+          id: MENU_ID_LAYOUT,
+          parentId: MENU_ID,
+          title: title,
+          contexts: ['page', 'selection', 'editable', 'frame']
+        }, function() {
+          if (chrome.runtime.lastError) {
+            // Menu may already exist
+          }
+        });
+      }
+    });
+  });
+}
+
 // Initialize menu when service worker starts
 function initializeMenu() {
   const parentTitle = chrome.i18n.getMessage('menu_title') || 'Text Mini Menu';
+  
+  // Remove existing menu to rebuild
   chrome.contextMenus.remove(MENU_ID, function() {
     if (chrome.runtime.lastError) {
       // Menu doesn't exist, ignore
     }
+    // Create parent menu
     chrome.contextMenus.create({
       id: MENU_ID,
       title: parentTitle,
@@ -188,58 +249,59 @@ function initializeMenu() {
       if (chrome.runtime.lastError) {
         // Menu may already exist
       }
+      // Create child menus after parent is created
+      createAllChildMenus();
     });
   });
-  
+}
+
+function createAllChildMenus() {
   getCurrentTabHostname(function(hostname) {
+    // Site toggle menu
+    const defaultSiteTitle = chrome.i18n.getMessage('disable_site') || 'Disable on this site';
+    chrome.contextMenus.create({
+      id: MENU_ID_SITE,
+      parentId: MENU_ID,
+      title: defaultSiteTitle,
+      contexts: ['page', 'selection', 'editable', 'frame']
+    }, function() {
+      if (chrome.runtime.lastError) {
+        // Menu may already exist
+      }
+    });
+    
+    // Editable toggle menu
+    const defaultEditableTitle = chrome.i18n.getMessage('disable_editable') || 'Disable in editable fields';
+    chrome.contextMenus.create({
+      id: MENU_ID_EDITABLE,
+      parentId: MENU_ID,
+      title: defaultEditableTitle,
+      contexts: ['page', 'selection', 'editable', 'frame']
+    }, function() {
+      if (chrome.runtime.lastError) {
+        // Menu may already exist
+      }
+    });
+    
+    // Layout toggle menu
+    getLayout(function(isHorizontal) {
+      const actionKey = isHorizontal ? 'switch_vertical' : 'switch_horizontal';
+      const title = chrome.i18n.getMessage(actionKey) || (isHorizontal ? 'Switch to vertical layout' : 'Switch to horizontal layout');
+      chrome.contextMenus.create({
+        id: MENU_ID_LAYOUT,
+        parentId: MENU_ID,
+        title: title,
+        contexts: ['page', 'selection', 'editable', 'frame']
+      }, function() {
+        if (chrome.runtime.lastError) {
+          // Menu may already exist
+        }
+      });
+    });
+    
     if (hostname) {
       createOrUpdateMenu(hostname);
       createOrUpdateEditableMenu(hostname);
-    } else {
-      const defaultSiteTitle = chrome.i18n.getMessage('disable_site') || 'Disable on this site';
-      
-      chrome.contextMenus.update(MENU_ID_SITE, {
-        title: defaultSiteTitle
-      }, function() {
-        if (chrome.runtime.lastError) {
-          chrome.contextMenus.create({
-            id: MENU_ID_SITE,
-            parentId: MENU_ID,
-            title: defaultSiteTitle,
-            contexts: ['page', 'selection', 'editable', 'frame']
-          }, function() {
-            if (chrome.runtime.lastError) {
-              // Menu may already exist
-            }
-          });
-        }
-      });
-      
-      const defaultEditableTitle = chrome.i18n.getMessage('disable_editable') || 'Disable in editable fields';
-      
-      chrome.contextMenus.update(MENU_ID_EDITABLE, {
-        title: defaultEditableTitle
-      }, function() {
-        if (chrome.runtime.lastError) {
-          chrome.contextMenus.create({
-            id: MENU_ID_EDITABLE,
-            parentId: MENU_ID,
-            title: defaultEditableTitle,
-            contexts: ['page', 'selection', 'editable', 'frame']
-          }, function() {
-            if (chrome.runtime.lastError) {
-              // Menu may already exist
-            }
-          });
-        }
-      });
-      
-      getCurrentTabHostname(function(h) {
-        if (h) {
-          createOrUpdateMenu(h);
-          createOrUpdateEditableMenu(h);
-        }
-      });
     }
   });
 }
@@ -287,6 +349,16 @@ function handleMenuClick(info, tab) {
       
       saveDisabledEditableSites(newSites, function() {
         createOrUpdateEditableMenu(hostname);
+      });
+    });
+    return;
+  }
+  
+  if (info.menuItemId === MENU_ID_LAYOUT) {
+    getLayout(function(isHorizontal) {
+      const newValue = !isHorizontal;
+      saveLayout(newValue, function() {
+        createOrUpdateLayoutMenu();
       });
     });
     return;
@@ -341,6 +413,9 @@ function handleStorageChanged(changes, namespace) {
         }
       });
     }
+    if (changes[LAYOUT_KEY]) {
+      createOrUpdateLayoutMenu();
+    }
   }
 }
 
@@ -375,6 +450,13 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
   if (message.action === 'get_disabled_editable_sites') {
     getDisabledEditableSites(function(sites) {
       sendResponse({ sites: sites || [] });
+    });
+    return true;
+  }
+  
+  if (message.action === 'get_layout') {
+    getLayout(function(isHorizontal) {
+      sendResponse({ horizontal: isHorizontal });
     });
     return true;
   }

@@ -19,8 +19,8 @@ const CLIPBOARD_CACHE_MS = 500;
 let lastPopupPosition = null;
 let lastSelectionRects = null;
 let savedInputElement = null;
-
 let savedMousePosition = null;
+let isHorizontalLayout = false;
 
 // Site disable state
 let isSiteDisabledCache = false;
@@ -28,6 +28,7 @@ let siteDisabledCheckTime = 0;
 const SITE_DISABLED_CACHE_MS = 500;
 const STORAGE_KEY = 'disabledSites';
 const EDITABLE_DISABLED_KEY = 'disabledEditableSites';
+const LAYOUT_KEY = 'horizontalLayout';
 
 function isContextValid() {
     try {
@@ -77,6 +78,22 @@ function getDisabledEditableSitesFromStorage(callback) {
             });
         } else {
             callback(result[EDITABLE_DISABLED_KEY]);
+        }
+    });
+}
+
+function getLayoutFromStorage(callback) {
+    chrome.storage.sync.get([LAYOUT_KEY], function(result) {
+        if (chrome.runtime.lastError || !result[LAYOUT_KEY]) {
+            chrome.storage.local.get([LAYOUT_KEY], function(localResult) {
+                if (chrome.runtime.lastError || !localResult[LAYOUT_KEY]) {
+                    callback(false);
+                } else {
+                    callback(localResult[LAYOUT_KEY]);
+                }
+            });
+        } else {
+            callback(result[LAYOUT_KEY]);
         }
     });
 }
@@ -525,6 +542,45 @@ function injectStyles() {
             transition: background 0.2s, border-color 0.2s !important;
         }
 
+        .text-mini-menu.horizontal {
+            flex-direction: row !important;
+            padding: 4px 8px !important;
+            gap: 2px !important;
+        }
+
+        .text-mini-menu.horizontal .menu-state {
+            flex-direction: row !important;
+            gap: 2px !important;
+        }
+
+        .text-mini-menu.horizontal .menu-btn-wrapper {
+            flex-shrink: 0 !important;
+        }
+
+        .text-mini-menu.horizontal .menu-btn {
+            width: auto !important;
+            padding: 4px 10px !important;
+            gap: 8px !important;
+        }
+
+        .text-mini-menu.horizontal .default-state {
+            display: flex !important;
+        }
+
+        .text-mini-menu.horizontal .hover-state {
+            display: none !important;
+        }
+
+        .text-mini-menu.horizontal .menu-icon {
+            width: 16px !important;
+            height: 16px !important;
+        }
+
+        .text-mini-menu.horizontal .btn-label {
+            display: inline !important;
+            font-size: 12.5px !important;
+        }
+
         .menu-state {
             display: flex !important;
             flex-direction: column !important;
@@ -539,11 +595,11 @@ function injectStyles() {
             display: none !important;
         }
 
-        .text-mini-menu:hover .default-state {
+        .text-mini-menu:not(.horizontal):hover .default-state {
             display: none !important;
         }
 
-        .text-mini-menu:hover .hover-state {
+        .text-mini-menu:not(.horizontal):hover .hover-state {
             display: flex !important;
         }
 
@@ -879,6 +935,10 @@ async function createPopup(event) {
     popup.id = 'text-mini-menu';
     popup.className = 'text-mini-menu';
 
+    if (isHorizontalLayout) {
+        popup.classList.add('horizontal');
+    }
+
     const searchLabel = getMessage('search');
     const copyLabel = getMessage('copy');
     const shareLabel = getMessage('share') || 'Share';
@@ -894,134 +954,209 @@ async function createPopup(event) {
     const isEditable = isSelectionInEditable();
 
     if (isEditable) {
-        const cutBtnDefault = createIconButton('icons/cut.svg', cutLabel);
-        defaultState.appendChild(cutBtnDefault);
+        if (isHorizontalLayout) {
+            // Horizontal: use labeled buttons with icon + text
+            const cutBtn = createLabeledButton('icons/cut.svg', cutLabel, cutLabel);
+            defaultState.appendChild(cutBtn);
 
-        const cutBtnHover = createLabeledButton('icons/cut.svg', cutLabel, cutLabel);
-        hoverState.appendChild(cutBtnHover);
+            const copyBtn = createLabeledButton('icons/copy.svg', copyLabel, copyLabel);
+            defaultState.appendChild(copyBtn);
 
-        const copyBtnDefault = createIconButton('icons/copy.svg', copyLabel);
-        defaultState.appendChild(copyBtnDefault);
+            const pasteBtn = createLabeledButton('icons/paste.svg', pasteLabel, pasteLabel);
+            defaultState.appendChild(pasteBtn);
 
-        const copyBtnHover = createLabeledButton('icons/copy.svg', copyLabel, copyLabel);
-        hoverState.appendChild(copyBtnHover);
-        
-        const pasteBtnDefault = createIconButton('icons/paste.svg', pasteLabel);
-        defaultState.appendChild(pasteBtnDefault);
+            cutBtn.addEventListener('mousedown', function(e) {
+                savedInputElement = document.activeElement;
+                e.preventDefault();
+                e.stopPropagation();
+                handleCutAction(e);
+            });
 
-        const pasteBtnHover = createLabeledButton('icons/paste.svg', pasteLabel, pasteLabel);
-        hoverState.appendChild(pasteBtnHover);
+            copyBtn.addEventListener('mousedown', function(e) {
+                savedInputElement = savedInputElement || document.activeElement;
+                e.preventDefault();
+                e.stopPropagation();
+            });
 
-        cutBtnDefault.addEventListener('mousedown', function(e) {
-            savedInputElement = document.activeElement;
-            e.preventDefault();
-            e.stopPropagation();
-            handleCutAction(e);
-        });
+            copyBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                handleCopyAction();
+            });
 
-        cutBtnHover.addEventListener('mousedown', function(e) {
-            savedInputElement = document.activeElement;
-            e.preventDefault();
-            e.stopPropagation();
-            handleCutAction(e);
-        });
+            pasteBtn.addEventListener('mousedown', function(e) {
+                savedInputElement = document.activeElement;
+                e.preventDefault();
+                e.stopPropagation();
+                handlePasteAction(e);
+            });
 
-        pasteBtnDefault.addEventListener('mousedown', function(e) {
-            savedInputElement = document.activeElement;
-            e.preventDefault();
-            e.stopPropagation();
-            handlePasteAction(e);
-        });
+        } else {
+            // Vertical: icon only + hover with text
+            const cutBtnDefault = createIconButton('icons/cut.svg', cutLabel);
+            defaultState.appendChild(cutBtnDefault);
 
-        pasteBtnHover.addEventListener('mousedown', function(e) {
-            savedInputElement = document.activeElement;
-            e.preventDefault();
-            e.stopPropagation();
-            handlePasteAction(e);
-        });
+            const cutBtnHover = createLabeledButton('icons/cut.svg', cutLabel, cutLabel);
+            hoverState.appendChild(cutBtnHover);
 
-        copyBtnDefault.addEventListener('mousedown', function(e) {
-            savedInputElement = savedInputElement || document.activeElement;
-            e.preventDefault();
-            e.stopPropagation();
-        });
+            const copyBtnDefault = createIconButton('icons/copy.svg', copyLabel);
+            defaultState.appendChild(copyBtnDefault);
 
-        copyBtnDefault.addEventListener('click', function(e) {
-            e.stopPropagation();
-            handleCopyAction();
-        });
+            const copyBtnHover = createLabeledButton('icons/copy.svg', copyLabel, copyLabel);
+            hoverState.appendChild(copyBtnHover);
+            
+            const pasteBtnDefault = createIconButton('icons/paste.svg', pasteLabel);
+            defaultState.appendChild(pasteBtnDefault);
 
-        copyBtnHover.addEventListener('mousedown', function(e) {
-            savedInputElement = savedInputElement || document.activeElement;
-            e.preventDefault();
-            e.stopPropagation();
-        });
+            const pasteBtnHover = createLabeledButton('icons/paste.svg', pasteLabel, pasteLabel);
+            hoverState.appendChild(pasteBtnHover);
 
-        copyBtnHover.addEventListener('click', function(e) {
-            e.stopPropagation();
-            handleCopyAction();
-        });
+            cutBtnDefault.addEventListener('mousedown', function(e) {
+                savedInputElement = document.activeElement;
+                e.preventDefault();
+                e.stopPropagation();
+                handleCutAction(e);
+            });
+
+            cutBtnHover.addEventListener('mousedown', function(e) {
+                savedInputElement = document.activeElement;
+                e.preventDefault();
+                e.stopPropagation();
+                handleCutAction(e);
+            });
+
+            copyBtnDefault.addEventListener('mousedown', function(e) {
+                savedInputElement = savedInputElement || document.activeElement;
+                e.preventDefault();
+                e.stopPropagation();
+            });
+
+            copyBtnDefault.addEventListener('click', function(e) {
+                e.stopPropagation();
+                handleCopyAction();
+            });
+
+            copyBtnHover.addEventListener('mousedown', function(e) {
+                savedInputElement = savedInputElement || document.activeElement;
+                e.preventDefault();
+                e.stopPropagation();
+            });
+
+            copyBtnHover.addEventListener('click', function(e) {
+                e.stopPropagation();
+                handleCopyAction();
+            });
+
+            pasteBtnDefault.addEventListener('mousedown', function(e) {
+                savedInputElement = document.activeElement;
+                e.preventDefault();
+                e.stopPropagation();
+                handlePasteAction(e);
+            });
+
+            pasteBtnHover.addEventListener('mousedown', function(e) {
+                savedInputElement = document.activeElement;
+                e.preventDefault();
+                e.stopPropagation();
+                handlePasteAction(e);
+            });
+        }
 
     } else {
-        let shareBtnDefault = null;
-        let shareBtnHover = null;
-        if (typeof navigator.share === 'function') {
-            shareBtnDefault = createIconButton('icons/share.svg', shareLabel);
-            defaultState.appendChild(shareBtnDefault);
+        // Non-editable
+        if (isHorizontalLayout) {
+            // Horizontal: use labeled buttons with icon + text
+            // Order: Copy, Search, Share
+            const copyBtn = createLabeledButton('icons/copy.svg', copyLabel, copyLabel);
+            defaultState.appendChild(copyBtn);
 
-            shareBtnHover = createLabeledButton('icons/share.svg', shareLabel, shareLabel);
-            hoverState.appendChild(shareBtnHover);
-        }
+            const searchBtn = createLabeledButton('icons/search.svg', searchLabel, searchLabel);
+            defaultState.appendChild(searchBtn);
 
-        const copyBtnDefault = createIconButton('icons/copy.svg', copyLabel);
-        defaultState.appendChild(copyBtnDefault);
+            if (typeof navigator.share === 'function') {
+                const shareBtn = createLabeledButton('icons/share.svg', shareLabel, shareLabel);
+                defaultState.appendChild(shareBtn);
+                shareBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    handleShareAction();
+                });
+            }
 
-        const searchBtnDefault = createIconButton('icons/search.svg', searchLabel);
-        defaultState.appendChild(searchBtnDefault);
-
-        const copyBtnHover = createLabeledButton('icons/copy.svg', copyLabel, copyLabel);
-        hoverState.appendChild(copyBtnHover);
-
-        const searchBtnHover = createLabeledButton('icons/search.svg', searchLabel, searchLabel);
-        hoverState.appendChild(searchBtnHover);
-
-        if (shareBtnDefault) {
-            shareBtnDefault.addEventListener('click', function(e) {
+            copyBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
-                handleShareAction();
+                handleCopyAction();
+            });
+
+            searchBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                handleSearchAction();
+            });
+
+        } else {
+            // Vertical: icon only + hover with text
+            let shareBtnDefault = null;
+            let shareBtnHover = null;
+            if (typeof navigator.share === 'function') {
+                shareBtnDefault = createIconButton('icons/share.svg', shareLabel);
+                defaultState.appendChild(shareBtnDefault);
+
+                shareBtnHover = createLabeledButton('icons/share.svg', shareLabel, shareLabel);
+                hoverState.appendChild(shareBtnHover);
+            }
+
+            const copyBtnDefault = createIconButton('icons/copy.svg', copyLabel);
+            defaultState.appendChild(copyBtnDefault);
+
+            const searchBtnDefault = createIconButton('icons/search.svg', searchLabel);
+            defaultState.appendChild(searchBtnDefault);
+
+            const copyBtnHover = createLabeledButton('icons/copy.svg', copyLabel, copyLabel);
+            hoverState.appendChild(copyBtnHover);
+
+            const searchBtnHover = createLabeledButton('icons/search.svg', searchLabel, searchLabel);
+            hoverState.appendChild(searchBtnHover);
+
+            if (shareBtnDefault) {
+                shareBtnDefault.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    handleShareAction();
+                });
+            }
+
+            if (shareBtnHover) {
+                shareBtnHover.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    handleShareAction();
+                });
+            }
+
+            copyBtnDefault.addEventListener('click', function(e) {
+                e.stopPropagation();
+                handleCopyAction();
+            });
+
+            copyBtnHover.addEventListener('click', function(e) {
+                e.stopPropagation();
+                handleCopyAction();
+            });
+
+            searchBtnDefault.addEventListener('click', function(e) {
+                e.stopPropagation();
+                handleSearchAction();
+            });
+
+            searchBtnHover.addEventListener('click', function(e) {
+                e.stopPropagation();
+                handleSearchAction();
             });
         }
-
-        if (shareBtnHover) {
-            shareBtnHover.addEventListener('click', function(e) {
-                e.stopPropagation();
-                handleShareAction();
-            });
-        }
-
-        copyBtnDefault.addEventListener('click', function(e) {
-            e.stopPropagation();
-            handleCopyAction();
-        });
-
-        copyBtnHover.addEventListener('click', function(e) {
-            e.stopPropagation();
-            handleCopyAction();
-        });
-
-        searchBtnDefault.addEventListener('click', function(e) {
-            e.stopPropagation();
-            handleSearchAction();
-        });
-
-        searchBtnHover.addEventListener('click', function(e) {
-            e.stopPropagation();
-            handleSearchAction();
-        });
     }
 
-    popup.appendChild(defaultState);
-    popup.appendChild(hoverState);
+    if (isHorizontalLayout) {
+        popup.appendChild(defaultState);
+    } else {
+        popup.appendChild(defaultState);
+        popup.appendChild(hoverState);
+    }
 
     popup.addEventListener('mouseenter', function() {
         resetPopupTimer();
@@ -1480,6 +1615,11 @@ chrome.storage.onChanged.addListener(function(changes, namespace) {
                 }
             }
         }
+        if (changes[LAYOUT_KEY]) {
+            getLayoutFromStorage(function(value) {
+                isHorizontalLayout = value;
+            });
+        }
     }
 });
 
@@ -1493,4 +1633,7 @@ function notifyBackground() {
     }
 }
 
-setTimeout(notifyBackground, 100);
+getLayoutFromStorage(function(value) {
+    isHorizontalLayout = value;
+    setTimeout(notifyBackground, 100);
+});

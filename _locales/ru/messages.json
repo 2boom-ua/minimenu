@@ -14,6 +14,12 @@
   "enable_editable": {
     "message": "Включить в полях ввода"
   },
+  "switch_horizontal": {
+    "message": "Переключить на горизонтальное меню"
+  },
+  "switch_vertical": {
+    "message": "Переключить на вертикальное меню"
+  },
   "search": {
     "message": "Поиск"
   },

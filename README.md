@@ -20,6 +20,7 @@ A compact menu that appears when you select text on a webpage. It provides quick
 - **Automatic popup closing** after 10 seconds of inactivity.
 - **Theme-aware** light/dark mode support.
 - **Disable extension on specific domains** — disable extension on specific sites via context menu.
+- **Switch between vertical and horizontal menu layout** — choose your preferred popup style via context menu.
 
 ## Supported content
 

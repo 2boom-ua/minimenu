@@ -371,6 +371,10 @@ function handleTabUpdated(tabId, changeInfo, tab) {
     let url = changeInfo.url || tab.url;
     if (!url) {
       chrome.tabs.get(tabId, function(fullTab) {
+        if (chrome.runtime.lastError) {
+          // Tab no longer exists
+          return;
+        }
         if (fullTab && fullTab.url) {
           const hostname = getHostname(fullTab.url);
           if (hostname) {
@@ -392,6 +396,10 @@ function handleTabUpdated(tabId, changeInfo, tab) {
 // Handle tab activation
 function handleTabActivated(activeInfo) {
   chrome.tabs.get(activeInfo.tabId, function(tab) {
+    if (chrome.runtime.lastError) {
+      // Tab no longer exists
+      return;
+    }
     if (tab && tab.url) {
       const hostname = getHostname(tab.url);
       if (hostname) {

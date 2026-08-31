@@ -1,6 +1,8 @@
 // Text Mini Menu - Background Service Worker
 // Copyright 2boom, 2026
 
+importScripts('storage-utils.js');
+
 console.log('[MiniMenu] Background service worker loaded');
 
 const MENU_ID = 'text_mini_menu';
@@ -38,97 +40,43 @@ function getCurrentTabHostname(callback) {
 
 // Get disabled sites from storage
 function getDisabledSites(callback) {
-  chrome.storage.sync.get([STORAGE_KEY], function(result) {
-    if (chrome.runtime.lastError || !result[STORAGE_KEY]) {
-      chrome.storage.local.get([STORAGE_KEY], function(localResult) {
-        if (chrome.runtime.lastError || !localResult[STORAGE_KEY]) {
-          callback([]);
-        } else {
-          callback(localResult[STORAGE_KEY]);
-        }
-      });
-    } else {
-      callback(result[STORAGE_KEY]);
-    }
+  getSyncedValue(STORAGE_KEY, []).then(function(value) {
+    callback(value);
   });
 }
 
 // Get disabled editable sites from storage
 function getDisabledEditableSites(callback) {
-  chrome.storage.sync.get([EDITABLE_DISABLED_KEY], function(result) {
-    if (chrome.runtime.lastError || !result[EDITABLE_DISABLED_KEY]) {
-      chrome.storage.local.get([EDITABLE_DISABLED_KEY], function(localResult) {
-        if (chrome.runtime.lastError || !localResult[EDITABLE_DISABLED_KEY]) {
-          callback([]);
-        } else {
-          callback(localResult[EDITABLE_DISABLED_KEY]);
-        }
-      });
-    } else {
-      callback(result[EDITABLE_DISABLED_KEY]);
-    }
+  getSyncedValue(EDITABLE_DISABLED_KEY, []).then(function(value) {
+    callback(value);
   });
 }
 
 // Get layout setting
 function getLayout(callback) {
-  chrome.storage.sync.get([LAYOUT_KEY], function(result) {
-    if (chrome.runtime.lastError || !result[LAYOUT_KEY]) {
-      chrome.storage.local.get([LAYOUT_KEY], function(localResult) {
-        if (chrome.runtime.lastError || !localResult[LAYOUT_KEY]) {
-          callback(false);
-        } else {
-          callback(localResult[LAYOUT_KEY]);
-        }
-      });
-    } else {
-      callback(result[LAYOUT_KEY]);
-    }
+  getSyncedValue(LAYOUT_KEY, false).then(function(value) {
+    callback(value);
   });
 }
 
 // Save layout setting
 function saveLayout(value, callback) {
-  const data = {};
-  data[LAYOUT_KEY] = value;
-  chrome.storage.sync.set(data, function() {
-    if (chrome.runtime.lastError) {
-      chrome.storage.local.set(data, function() {
-        if (callback) callback();
-      });
-    } else {
-      if (callback) callback();
-    }
+  setSyncedValue(LAYOUT_KEY, value).then(function() {
+    if (callback) callback();
   });
 }
 
 // Save disabled sites to storage
 function saveDisabledSites(sites, callback) {
-  const data = {};
-  data[STORAGE_KEY] = sites;
-  chrome.storage.sync.set(data, function() {
-    if (chrome.runtime.lastError) {
-      chrome.storage.local.set(data, function() {
-        if (callback) callback();
-      });
-    } else {
-      if (callback) callback();
-    }
+  setSyncedValue(STORAGE_KEY, sites).then(function() {
+    if (callback) callback();
   });
 }
 
 // Save disabled editable sites to storage
 function saveDisabledEditableSites(sites, callback) {
-  const data = {};
-  data[EDITABLE_DISABLED_KEY] = sites;
-  chrome.storage.sync.set(data, function() {
-    if (chrome.runtime.lastError) {
-      chrome.storage.local.set(data, function() {
-        if (callback) callback();
-      });
-    } else {
-      if (callback) callback();
-    }
+  setSyncedValue(EDITABLE_DISABLED_KEY, sites).then(function() {
+    if (callback) callback();
   });
 }
 
@@ -484,9 +432,6 @@ chrome.contextMenus.onClicked.addListener(handleMenuClick);
 chrome.runtime.onInstalled.addListener(function() {
   initializeMenu();
 });
-
-// Also initialize when service worker starts
-initializeMenu();
 
 // Setup event listeners
 chrome.tabs.onUpdated.addListener(handleTabUpdated);

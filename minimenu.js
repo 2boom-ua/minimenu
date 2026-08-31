@@ -22,10 +22,6 @@ let savedInputElement = null;
 let savedMousePosition = null;
 let isHorizontalLayout = false;
 
-// Site disable state
-let isSiteDisabledCache = false;
-let siteDisabledCheckTime = 0;
-const SITE_DISABLED_CACHE_MS = 500;
 const STORAGE_KEY = 'disabledSites';
 const EDITABLE_DISABLED_KEY = 'disabledEditableSites';
 const LAYOUT_KEY = 'horizontalLayout';
@@ -50,107 +46,9 @@ function getCurrentHostname() {
     }
 }
 
-function getDisabledSitesFromStorage(callback) {
-    chrome.storage.sync.get([STORAGE_KEY], function(result) {
-        if (chrome.runtime.lastError || !result[STORAGE_KEY]) {
-            chrome.storage.local.get([STORAGE_KEY], function(localResult) {
-                if (chrome.runtime.lastError || !localResult[STORAGE_KEY]) {
-                    callback([]);
-                } else {
-                    callback(localResult[STORAGE_KEY]);
-                }
-            });
-        } else {
-            callback(result[STORAGE_KEY]);
-        }
-    });
-}
-
-function getDisabledEditableSitesFromStorage(callback) {
-    chrome.storage.sync.get([EDITABLE_DISABLED_KEY], function(result) {
-        if (chrome.runtime.lastError || !result[EDITABLE_DISABLED_KEY]) {
-            chrome.storage.local.get([EDITABLE_DISABLED_KEY], function(localResult) {
-                if (chrome.runtime.lastError || !localResult[EDITABLE_DISABLED_KEY]) {
-                    callback([]);
-                } else {
-                    callback(localResult[EDITABLE_DISABLED_KEY]);
-                }
-            });
-        } else {
-            callback(result[EDITABLE_DISABLED_KEY]);
-        }
-    });
-}
-
 function getLayoutFromStorage(callback) {
-    chrome.storage.sync.get([LAYOUT_KEY], function(result) {
-        if (chrome.runtime.lastError || !result[LAYOUT_KEY]) {
-            chrome.storage.local.get([LAYOUT_KEY], function(localResult) {
-                if (chrome.runtime.lastError || !localResult[LAYOUT_KEY]) {
-                    callback(false);
-                } else {
-                    callback(localResult[LAYOUT_KEY]);
-                }
-            });
-        } else {
-            callback(result[LAYOUT_KEY]);
-        }
-    });
-}
-
-function isSiteDisabled() {
-    const hostname = getCurrentHostname();
-    if (!hostname) {
-        return false;
-    }
-    
-    let result = false;
-    try {
-        chrome.storage.sync.get([STORAGE_KEY], function(data) {
-            if (chrome.runtime.lastError || !data[STORAGE_KEY]) {
-                chrome.storage.local.get([STORAGE_KEY], function(localData) {
-                    if (!chrome.runtime.lastError && localData[STORAGE_KEY]) {
-                        isSiteDisabledCache = localData[STORAGE_KEY].includes(hostname);
-                    } else {
-                        isSiteDisabledCache = false;
-                    }
-                    siteDisabledCheckTime = Date.now();
-                });
-            } else {
-                isSiteDisabledCache = data[STORAGE_KEY].includes(hostname);
-                siteDisabledCheckTime = Date.now();
-            }
-        });
-    } catch (e) {
-        return false;
-    }
-    
-    return isSiteDisabledCache;
-}
-
-function isSiteDisabledSync() {
-    return isSiteDisabledCache;
-}
-
-function checkSiteDisabledAsync(callback) {
-    const hostname = getCurrentHostname();
-    if (!hostname) {
-        callback(false);
-        return;
-    }
-    
-    chrome.storage.sync.get([STORAGE_KEY], function(result) {
-        if (chrome.runtime.lastError || !result[STORAGE_KEY]) {
-            chrome.storage.local.get([STORAGE_KEY], function(localResult) {
-                if (chrome.runtime.lastError || !localResult[STORAGE_KEY]) {
-                    callback(false);
-                } else {
-                    callback(localResult[STORAGE_KEY].includes(hostname));
-                }
-            });
-        } else {
-            callback(result[STORAGE_KEY].includes(hostname));
-        }
+    getSyncedValue(LAYOUT_KEY, false).then(function(value) {
+        callback(value);
     });
 }
 
@@ -196,6 +94,7 @@ function createIconButton(iconPath, altText) {
         background-repeat: no-repeat;
         background-position: center;
         flex-shrink: 0;
+        color: var(--icon-color);
     `;
     icon.setAttribute('aria-label', altText);
 
@@ -228,10 +127,6 @@ function createLabeledButton(iconPath, altText, labelText) {
         height: 18px !important;
     `;
 
-    const isDarkTheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const lightFilter = 'invert(28%) sepia(0%) saturate(1703%) hue-rotate(268deg) brightness(90%) contrast(86%)';
-    const darkFilter = 'invert(90%) sepia(99%) saturate(0%) hue-rotate(147deg) brightness(89%) contrast(90%)';
-
     const icon = document.createElement('span');
     icon.className = 'menu-icon';
     icon.style.cssText = `
@@ -244,7 +139,7 @@ function createLabeledButton(iconPath, altText, labelText) {
         background-repeat: no-repeat !important;
         background-position: center !important;
         flex-shrink: 0 !important;
-        filter: ${isDarkTheme ? darkFilter : lightFilter} !important;
+        color: var(--icon-color) !important;
     `;
     icon.setAttribute('aria-label', altText);
 
@@ -278,14 +173,10 @@ function createLabeledButton(iconPath, altText, labelText) {
 
     wrapper.addEventListener('mouseenter', function() {
         button.style.setProperty('background-color', 'var(--bg-btn-hover)', 'important');
-        const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        icon.style.setProperty('filter', isDark ? darkFilter : lightFilter, 'important');
     });
 
     wrapper.addEventListener('mouseleave', function() {
         button.style.setProperty('background-color', 'transparent', 'important');
-        const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        icon.style.setProperty('filter', isDark ? darkFilter : lightFilter, 'important');
     });
 
     return wrapper;
@@ -514,7 +405,7 @@ function injectStyles() {
         :root {
             --bg-popup: #ffffff;
             --border-popup: #d1d5db;
-            --bg-btn-hover: #efefef;
+            --bg-btn-hover: #ededed;
             --icon-color: #4a4a4a;
         }
 
@@ -522,7 +413,7 @@ function injectStyles() {
             :root {
                 --bg-popup: #1f1f1f;
                 --border-popup: #4b4b4b;
-                --bg-btn-hover: #404040;
+                --bg-btn-hover: #3e3e3e;
                 --icon-color: #d8d8d8;
             }
         }
@@ -536,15 +427,22 @@ function injectStyles() {
             border: 1px solid var(--border-popup) !important;
             border-radius: 8px !important;
             padding: 8px 4px !important;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.17) !important;
             z-index: 2147483647 !important;
             pointer-events: auto !important;
             transition: background 0.2s, border-color 0.2s !important;
         }
+        
+    @media (prefers-color-scheme: dark) {
+        .text-mini-menu {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6),
+                        0 0 0 1px rgba(255, 255, 255, 0.06) !important;
+        }
+    }
 
         .text-mini-menu.horizontal {
             flex-direction: row !important;
-            padding: 4px 8px !important;
+            padding: 4px 4px !important;
             gap: 2px !important;
         }
 
@@ -643,13 +541,6 @@ function injectStyles() {
             background-repeat: no-repeat !important;
             background-position: center !important;
             flex-shrink: 0 !important;
-            filter: invert(28%) sepia(0%) saturate(1703%) hue-rotate(268deg) brightness(90%) contrast(86%);
-        }
-
-        @media (prefers-color-scheme: dark) {
-            .menu-icon {
-                filter: invert(90%) sepia(99%) saturate(0%) hue-rotate(147deg) brightness(89%) contrast(90%);
-            }
         }
 
         .btn-label {
@@ -846,22 +737,8 @@ async function updateSelectionPopup() {
     
     const hostname = getCurrentHostname();
     if (hostname) {
-        const disabled = await new Promise(function(resolve) {
-            chrome.storage.sync.get([STORAGE_KEY], function(result) {
-                if (chrome.runtime.lastError || !result[STORAGE_KEY]) {
-                    chrome.storage.local.get([STORAGE_KEY], function(localResult) {
-                        if (chrome.runtime.lastError || !localResult[STORAGE_KEY]) {
-                            resolve(false);
-                        } else {
-                            resolve(localResult[STORAGE_KEY].includes(hostname));
-                        }
-                    });
-                } else {
-                    resolve(result[STORAGE_KEY].includes(hostname));
-                }
-            });
-        });
-        if (disabled) {
+        const disabled = await getSyncedValue(STORAGE_KEY, []);
+        if (disabled && disabled.includes(hostname)) {
             if (popup) removePopup();
             return;
         }
@@ -885,41 +762,13 @@ async function createPopup(event) {
     
     const hostname = getCurrentHostname();
     if (hostname) {
-        const disabled = await new Promise(function(resolve) {
-            chrome.storage.sync.get([STORAGE_KEY], function(result) {
-                if (chrome.runtime.lastError || !result[STORAGE_KEY]) {
-                    chrome.storage.local.get([STORAGE_KEY], function(localResult) {
-                        if (chrome.runtime.lastError || !localResult[STORAGE_KEY]) {
-                            resolve(false);
-                        } else {
-                            resolve(localResult[STORAGE_KEY].includes(hostname));
-                        }
-                    });
-                } else {
-                    resolve(result[STORAGE_KEY].includes(hostname));
-                }
-            });
-        });
-        if (disabled) {
+        const disabled = await getSyncedValue(STORAGE_KEY, []);
+        if (disabled && disabled.includes(hostname)) {
             return;
         }
         
-        const editableDisabled = await new Promise(function(resolve) {
-            chrome.storage.sync.get([EDITABLE_DISABLED_KEY], function(result) {
-                if (chrome.runtime.lastError || !result[EDITABLE_DISABLED_KEY]) {
-                    chrome.storage.local.get([EDITABLE_DISABLED_KEY], function(localResult) {
-                        if (chrome.runtime.lastError || !localResult[EDITABLE_DISABLED_KEY]) {
-                            resolve(false);
-                        } else {
-                            resolve(localResult[EDITABLE_DISABLED_KEY].includes(hostname));
-                        }
-                    });
-                } else {
-                    resolve(result[EDITABLE_DISABLED_KEY].includes(hostname));
-                }
-            });
-        });
-        if (editableDisabled && isSelectionInEditable()) {
+        const editableDisabled = await getSyncedValue(EDITABLE_DISABLED_KEY, []);
+        if (editableDisabled && editableDisabled.includes(hostname) && isSelectionInEditable()) {
             return;
         }
     }
@@ -1257,7 +1106,7 @@ document.addEventListener('scroll', function() {
     handleReposition();
 }, true);
 
-document.addEventListener('resize', function() {
+window.addEventListener('resize', function() {
     handleReposition();
 });
 
@@ -1354,42 +1203,14 @@ document.addEventListener('selectionchange', function() {
 
         const hostname = getCurrentHostname();
         if (hostname) {
-            const disabled = await new Promise(function(resolve) {
-                chrome.storage.sync.get([STORAGE_KEY], function(result) {
-                    if (chrome.runtime.lastError || !result[STORAGE_KEY]) {
-                        chrome.storage.local.get([STORAGE_KEY], function(localResult) {
-                            if (chrome.runtime.lastError || !localResult[STORAGE_KEY]) {
-                                resolve(false);
-                            } else {
-                                resolve(localResult[STORAGE_KEY].includes(hostname));
-                            }
-                        });
-                    } else {
-                        resolve(result[STORAGE_KEY].includes(hostname));
-                    }
-                });
-            });
-            if (disabled) {
+            const disabled = await getSyncedValue(STORAGE_KEY, []);
+            if (disabled && disabled.includes(hostname)) {
                 if (popup) removePopup();
                 return;
             }
             
-            const editableDisabled = await new Promise(function(resolve) {
-                chrome.storage.sync.get([EDITABLE_DISABLED_KEY], function(result) {
-                    if (chrome.runtime.lastError || !result[EDITABLE_DISABLED_KEY]) {
-                        chrome.storage.local.get([EDITABLE_DISABLED_KEY], function(localResult) {
-                            if (chrome.runtime.lastError || !localResult[EDITABLE_DISABLED_KEY]) {
-                                resolve(false);
-                            } else {
-                                resolve(localResult[EDITABLE_DISABLED_KEY].includes(hostname));
-                            }
-                        });
-                    } else {
-                        resolve(result[EDITABLE_DISABLED_KEY].includes(hostname));
-                    }
-                });
-            });
-            if (editableDisabled && isSelectionInEditable()) {
+            const editableDisabled = await getSyncedValue(EDITABLE_DISABLED_KEY, []);
+            if (editableDisabled && editableDisabled.includes(hostname) && isSelectionInEditable()) {
                 if (popup) removePopup();
                 return;
             }
@@ -1458,42 +1279,14 @@ document.addEventListener('mouseup', async function(e) {
 
     const hostname = getCurrentHostname();
     if (hostname) {
-        const disabled = await new Promise(function(resolve) {
-            chrome.storage.sync.get([STORAGE_KEY], function(result) {
-                if (chrome.runtime.lastError || !result[STORAGE_KEY]) {
-                    chrome.storage.local.get([STORAGE_KEY], function(localResult) {
-                        if (chrome.runtime.lastError || !localResult[STORAGE_KEY]) {
-                            resolve(false);
-                        } else {
-                            resolve(localResult[STORAGE_KEY].includes(hostname));
-                        }
-                    });
-                } else {
-                    resolve(result[STORAGE_KEY].includes(hostname));
-                }
-            });
-        });
-        if (disabled) {
+        const disabled = await getSyncedValue(STORAGE_KEY, []);
+        if (disabled && disabled.includes(hostname)) {
             if (popup) removePopup();
             return;
         }
         
-        const editableDisabled = await new Promise(function(resolve) {
-            chrome.storage.sync.get([EDITABLE_DISABLED_KEY], function(result) {
-                if (chrome.runtime.lastError || !result[EDITABLE_DISABLED_KEY]) {
-                    chrome.storage.local.get([EDITABLE_DISABLED_KEY], function(localResult) {
-                        if (chrome.runtime.lastError || !localResult[EDITABLE_DISABLED_KEY]) {
-                            resolve(false);
-                        } else {
-                            resolve(localResult[EDITABLE_DISABLED_KEY].includes(hostname));
-                        }
-                    });
-                } else {
-                    resolve(result[EDITABLE_DISABLED_KEY].includes(hostname));
-                }
-            });
-        });
-        if (editableDisabled && isSelectionInEditable()) {
+        const editableDisabled = await getSyncedValue(EDITABLE_DISABLED_KEY, []);
+        if (editableDisabled && editableDisabled.includes(hostname) && isSelectionInEditable()) {
             if (popup) removePopup();
             return;
         }
@@ -1518,42 +1311,14 @@ document.addEventListener('dblclick', async function(e) {
 
     const hostname = getCurrentHostname();
     if (hostname) {
-        const disabled = await new Promise(function(resolve) {
-            chrome.storage.sync.get([STORAGE_KEY], function(result) {
-                if (chrome.runtime.lastError || !result[STORAGE_KEY]) {
-                    chrome.storage.local.get([STORAGE_KEY], function(localResult) {
-                        if (chrome.runtime.lastError || !localResult[STORAGE_KEY]) {
-                            resolve(false);
-                        } else {
-                            resolve(localResult[STORAGE_KEY].includes(hostname));
-                        }
-                    });
-                } else {
-                    resolve(result[STORAGE_KEY].includes(hostname));
-                }
-            });
-        });
-        if (disabled) {
+        const disabled = await getSyncedValue(STORAGE_KEY, []);
+        if (disabled && disabled.includes(hostname)) {
             if (popup) removePopup();
             return;
         }
         
-        const editableDisabled = await new Promise(function(resolve) {
-            chrome.storage.sync.get([EDITABLE_DISABLED_KEY], function(result) {
-                if (chrome.runtime.lastError || !result[EDITABLE_DISABLED_KEY]) {
-                    chrome.storage.local.get([EDITABLE_DISABLED_KEY], function(localResult) {
-                        if (chrome.runtime.lastError || !localResult[EDITABLE_DISABLED_KEY]) {
-                            resolve(false);
-                        } else {
-                            resolve(localResult[EDITABLE_DISABLED_KEY].includes(hostname));
-                        }
-                    });
-                } else {
-                    resolve(result[EDITABLE_DISABLED_KEY].includes(hostname));
-                }
-            });
-        });
-        if (editableDisabled) {
+        const editableDisabled = await getSyncedValue(EDITABLE_DISABLED_KEY, []);
+        if (editableDisabled && editableDisabled.includes(hostname)) {
             const target = e.target;
             if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
                 return;
@@ -1607,11 +1372,6 @@ chrome.storage.onChanged.addListener(function(changes, namespace) {
                 const newEditableSites = changes[EDITABLE_DISABLED_KEY] ? changes[EDITABLE_DISABLED_KEY].newValue || [] : [];
                 if (newSites.includes(hostname) || (newEditableSites.includes(hostname) && isSelectionInEditable())) {
                     removePopup();
-                    isSiteDisabledCache = true;
-                    siteDisabledCheckTime = Date.now();
-                } else {
-                    isSiteDisabledCache = false;
-                    siteDisabledCheckTime = Date.now();
                 }
             }
         }

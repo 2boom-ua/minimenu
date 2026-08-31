@@ -40,6 +40,7 @@
         "<all_urls>"
       ],
       "js": [
+        "storage-utils.js",
         "minimenu.js"
       ],
       "run_at": "document_end",

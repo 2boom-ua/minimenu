@@ -1,4 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 9.89">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #4a4a4a;
+      }
+      @media (prefers-color-scheme: dark) {
+        .cls-1 { fill: #d8d8d8; }
+      }
+    </style>
+  </defs>
+  <g id="Layer_1-2" data-name="Layer_1">
+    <path class="cls-1" d="M0,2.13c0-.4.32-.72.7-.72v5.66c0,1.17.96,2.13,2.13,2.13h3.53c0,.38-.32.7-.7.7h-2.98c-1.49,0-2.68-1.19-2.68-2.68V2.13h0Z"/>
+    <path class="cls-1" d="M3.06,0c-.79,0-1.43.64-1.43,1.4v5.66c0,.79.64,1.43,1.43,1.43h3.53c.79,0,1.4-.64,1.4-1.43V2.4c0-.28-.11-.55-.3-.74l-1.36-1.34C6.15.13,5.87,0,5.6,0h-2.53,0ZM7.17,2.13h-.94c-.19,0-.34-.17-.34-.36v-.91l1.28,1.28ZM6.6,7.77h-3.53c-.38,0-.7-.32-.7-.7V1.4c0-.38.32-.7.7-.7h2.13v1.06c0,.57.47,1.04,1.04,1.04h1.06v4.26c0,.38-.32.7-.7.7h0Z"/>
+  </g>
 </svg>

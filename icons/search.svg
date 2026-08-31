@@ -1,4 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-  <circle cx="11" cy="11" r="8"/>
-  <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 9.71 9.71">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #4a4a4a;
+      }
+      @media (prefers-color-scheme: dark) {
+        .cls-1 { fill: #d8d8d8; }
+      }
+    </style>
+  </defs>
+  <g id="Layer_1-2" data-name="Layer_1">
+    <path class="cls-1" d="M6.76,7.29c-.74.62-1.68.96-2.64.96C1.84,8.25,0,6.4,0,4.12S1.85,0,4.12,0s4.12,1.85,4.12,4.12c0,.96-.34,1.9-.96,2.64l2.35,2.34c.05.07.08.14.08.23,0,.21-.17.38-.38.38-.08,0-.16-.03-.23-.08,0,0-2.35-2.34-2.35-2.34ZM7.5,4.12c0-1.87-1.51-3.38-3.38-3.38S.74,2.25.74,4.12s1.51,3.38,3.38,3.38,3.38-1.51,3.38-3.38Z"/>
+  </g>
 </svg>

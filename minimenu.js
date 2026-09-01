@@ -405,7 +405,7 @@ function injectStyles() {
         :root {
             --bg-popup: #ffffff;
             --border-popup: #d1d5db;
-            --bg-btn-hover: #ededed;
+            --bg-btn-hover: #e0e0e0;
             --icon-color: #4a4a4a;
         }
 
@@ -413,7 +413,7 @@ function injectStyles() {
             :root {
                 --bg-popup: #1f1f1f;
                 --border-popup: #4b4b4b;
-                --bg-btn-hover: #3e3e3e;
+                --bg-btn-hover: #363636;
                 --icon-color: #d8d8d8;
             }
         }

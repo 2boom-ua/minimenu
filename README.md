@@ -58,6 +58,8 @@ background.js
 minimenu.js
 manifest.json
 icons/
+icons/chrome
+icons/edge
 _locales/
 ```
 

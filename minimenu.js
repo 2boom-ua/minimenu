@@ -26,6 +26,10 @@ const STORAGE_KEY = 'disabledSites';
 const EDITABLE_DISABLED_KEY = 'disabledEditableSites';
 const LAYOUT_KEY = 'horizontalLayout';
 
+// Detect browser
+const isEdge = navigator.userAgent.indexOf('Edg') > -1;
+const ICON_PATH = isEdge ? 'icons/edge/' : 'icons/chrome/';
+
 function isContextValid() {
     try {
         return !!chrome.runtime.id;
@@ -805,13 +809,13 @@ async function createPopup(event) {
     if (isEditable) {
         if (isHorizontalLayout) {
             // Horizontal: use labeled buttons with icon + text
-            const cutBtn = createLabeledButton('icons/cut.svg', cutLabel, cutLabel);
+            const cutBtn = createLabeledButton(ICON_PATH + 'cut.svg', cutLabel, cutLabel);
             defaultState.appendChild(cutBtn);
 
-            const copyBtn = createLabeledButton('icons/copy.svg', copyLabel, copyLabel);
+            const copyBtn = createLabeledButton(ICON_PATH + 'copy.svg', copyLabel, copyLabel);
             defaultState.appendChild(copyBtn);
 
-            const pasteBtn = createLabeledButton('icons/paste.svg', pasteLabel, pasteLabel);
+            const pasteBtn = createLabeledButton(ICON_PATH + 'paste.svg', pasteLabel, pasteLabel);
             defaultState.appendChild(pasteBtn);
 
             cutBtn.addEventListener('mousedown', function(e) {
@@ -841,22 +845,22 @@ async function createPopup(event) {
 
         } else {
             // Vertical: icon only + hover with text
-            const cutBtnDefault = createIconButton('icons/cut.svg', cutLabel);
+            const cutBtnDefault = createIconButton(ICON_PATH + 'cut.svg', cutLabel);
             defaultState.appendChild(cutBtnDefault);
 
-            const cutBtnHover = createLabeledButton('icons/cut.svg', cutLabel, cutLabel);
+            const cutBtnHover = createLabeledButton(ICON_PATH + 'cut.svg', cutLabel, cutLabel);
             hoverState.appendChild(cutBtnHover);
 
-            const copyBtnDefault = createIconButton('icons/copy.svg', copyLabel);
+            const copyBtnDefault = createIconButton(ICON_PATH + 'copy.svg', copyLabel);
             defaultState.appendChild(copyBtnDefault);
 
-            const copyBtnHover = createLabeledButton('icons/copy.svg', copyLabel, copyLabel);
+            const copyBtnHover = createLabeledButton(ICON_PATH + 'copy.svg', copyLabel, copyLabel);
             hoverState.appendChild(copyBtnHover);
             
-            const pasteBtnDefault = createIconButton('icons/paste.svg', pasteLabel);
+            const pasteBtnDefault = createIconButton(ICON_PATH + 'paste.svg', pasteLabel);
             defaultState.appendChild(pasteBtnDefault);
 
-            const pasteBtnHover = createLabeledButton('icons/paste.svg', pasteLabel, pasteLabel);
+            const pasteBtnHover = createLabeledButton(ICON_PATH + 'paste.svg', pasteLabel, pasteLabel);
             hoverState.appendChild(pasteBtnHover);
 
             cutBtnDefault.addEventListener('mousedown', function(e) {
@@ -915,14 +919,14 @@ async function createPopup(event) {
         if (isHorizontalLayout) {
             // Horizontal: use labeled buttons with icon + text
             // Order: Copy, Search, Share
-            const copyBtn = createLabeledButton('icons/copy.svg', copyLabel, copyLabel);
+            const copyBtn = createLabeledButton(ICON_PATH + 'copy.svg', copyLabel, copyLabel);
             defaultState.appendChild(copyBtn);
 
-            const searchBtn = createLabeledButton('icons/search.svg', searchLabel, searchLabel);
+            const searchBtn = createLabeledButton(ICON_PATH + 'search.svg', searchLabel, searchLabel);
             defaultState.appendChild(searchBtn);
 
             if (typeof navigator.share === 'function') {
-                const shareBtn = createLabeledButton('icons/share.svg', shareLabel, shareLabel);
+                const shareBtn = createLabeledButton(ICON_PATH + 'share.svg', shareLabel, shareLabel);
                 defaultState.appendChild(shareBtn);
                 shareBtn.addEventListener('click', function(e) {
                     e.stopPropagation();
@@ -945,23 +949,23 @@ async function createPopup(event) {
             let shareBtnDefault = null;
             let shareBtnHover = null;
             if (typeof navigator.share === 'function') {
-                shareBtnDefault = createIconButton('icons/share.svg', shareLabel);
+                shareBtnDefault = createIconButton(ICON_PATH + 'share.svg', shareLabel);
                 defaultState.appendChild(shareBtnDefault);
 
-                shareBtnHover = createLabeledButton('icons/share.svg', shareLabel, shareLabel);
+                shareBtnHover = createLabeledButton(ICON_PATH + 'share.svg', shareLabel, shareLabel);
                 hoverState.appendChild(shareBtnHover);
             }
 
-            const copyBtnDefault = createIconButton('icons/copy.svg', copyLabel);
+            const copyBtnDefault = createIconButton(ICON_PATH + 'copy.svg', copyLabel);
             defaultState.appendChild(copyBtnDefault);
 
-            const searchBtnDefault = createIconButton('icons/search.svg', searchLabel);
+            const searchBtnDefault = createIconButton(ICON_PATH + 'search.svg', searchLabel);
             defaultState.appendChild(searchBtnDefault);
 
-            const copyBtnHover = createLabeledButton('icons/copy.svg', copyLabel, copyLabel);
+            const copyBtnHover = createLabeledButton(ICON_PATH + 'copy.svg', copyLabel, copyLabel);
             hoverState.appendChild(copyBtnHover);
 
-            const searchBtnHover = createLabeledButton('icons/search.svg', searchLabel, searchLabel);
+            const searchBtnHover = createLabeledButton(ICON_PATH + 'search.svg', searchLabel, searchLabel);
             hoverState.appendChild(searchBtnHover);
 
             if (shareBtnDefault) {

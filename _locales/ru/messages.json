@@ -9,7 +9,7 @@
     "message": "Включить на этом сайте"
   },
   "disable_editable": {
-    "message": "Отключить в полях ввода"
+    "message": "Отключить в полях ввода на этом сайте"
   },
   "enable_editable": {
     "message": "Включить в полях ввода"
@@ -24,13 +24,13 @@
     "message": "Поиск"
   },
   "copy": {
-    "message": "Копировать"
+    "message": "Копия"
   },
   "cut": {
     "message": "Вырезать"
   },
   "paste": {
-    "message": "Вставить"
+    "message": "Вставка"
   },
   "share": {
     "message": "Поделиться"

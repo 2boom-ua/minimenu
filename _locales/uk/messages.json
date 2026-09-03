@@ -9,10 +9,10 @@
     "message": "Увімкнути на цьому сайті"
   },
   "disable_editable": {
-    "message": "Вимкнути в полях вводу"
+    "message": "Вимкнути в полях вводу на цьому сайті"
   },
   "enable_editable": {
-    "message": "Увімкнути в полях вводу"
+    "message": "Увімкнути в полях вводу на цьому сайті"
   },
   "switch_horizontal": {
     "message": "Перемкнути на горизонтальне меню"
@@ -24,15 +24,15 @@
     "message": "Пошук"
   },
   "copy": {
-    "message": "Копіювати"
+    "message": "Копія"
   },
   "cut": {
     "message": "Вирізати"
   },
   "paste": {
-    "message": "Вставити"
+    "message": "Вставка"
   },
   "share": {
-    "message": "Поділитися"
+    "message": "Поширити"
   }
 }

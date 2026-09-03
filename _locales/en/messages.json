@@ -9,10 +9,10 @@
     "message": "Enable on this site"
   },
   "disable_editable": {
-    "message": "Disable in editable fields"
+    "message": "Disable editable fields on this site"
   },
   "enable_editable": {
-    "message": "Enable in editable fields"
+    "message": "Enable editable fields on this site"
   },
   "switch_horizontal": {
     "message": "Switch to horizontal layout"

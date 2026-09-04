@@ -26,9 +26,7 @@ const STORAGE_KEY = 'disabledSites';
 const EDITABLE_DISABLED_KEY = 'disabledEditableSites';
 const LAYOUT_KEY = 'horizontalLayout';
 
-// Detect browser
-const isEdge = navigator.userAgent.indexOf('Edg') > -1;
-const ICON_PATH = isEdge ? 'icons/edge/' : 'icons/chrome/';
+const ICON_PATH = 'icons/'
 
 function isContextValid() {
     try {

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Text Mini Menu",
-  "version": "2.5",
+  "version": "2.6",
   "description": "Show mini menu when selecting text",
   "default_locale": "en",
   "author": "(c) 2boom 2026",

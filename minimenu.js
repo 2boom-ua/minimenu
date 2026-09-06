@@ -88,15 +88,17 @@ function createIconButton(iconPath, altText) {
     const icon = document.createElement('span');
     icon.className = 'menu-icon';
     icon.style.cssText = `
-        display: inline-block;
-        width: 18px;
-        height: 18px;
-        background-image: url('${iconUrl}');
-        background-size: contain;
-        background-repeat: no-repeat;
-        background-position: center;
-        flex-shrink: 0;
-        color: var(--icon-color);
+        all: initial !important;
+        display: inline-block !important;
+        width: 18px !important;
+        height: 18px !important;
+        background-image: url('${iconUrl}') !important;
+        background-size: contain !important;
+        background-repeat: no-repeat !important;
+        background-position: center !important;
+        flex-shrink: 0 !important;
+        color: var(--icon-color) !important;
+        transform: translateZ(0) !important;
     `;
     icon.setAttribute('aria-label', altText);
 

@@ -427,8 +427,8 @@ function injectStyles() {
             gap: 6px !important;
             background: var(--bg-popup) !important;
             border: 1px solid var(--border-popup) !important;
-            border-radius: 8px !important;
-            padding: 8px 4px !important;
+            border-radius: 10px !important;
+            padding: 4px 4px !important;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.17) !important;
             z-index: 2147483647 !important;
             pointer-events: auto !important;
@@ -507,7 +507,7 @@ function injectStyles() {
             display: flex !important;
             align-items: center !important;
             justify-content: flex-start !important;
-            border-radius: 4px !important;
+            border-radius: 6px !important;
             transition: background-color 120ms ease !important;
             flex-shrink: 0 !important;
         }
@@ -524,7 +524,7 @@ function injectStyles() {
 
             background: transparent !important;
             border: none !important;
-            border-radius: 4px !important;
+            border-radius: 6px !important;
 
             cursor: pointer !important;
             outline: none !important;

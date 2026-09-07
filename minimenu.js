@@ -403,7 +403,7 @@ function showTooltip(message) {
         position: fixed !important;
         background: var(--bg-popup) !important;
         border: 1px solid var(--border-popup) !important;
-        border-radius: 8px !important;
+        border-radius: 10px !important;
         padding: 8px 16px !important;
         font-size: 14px !important;
         font-family: "Segoe UI Variable", "Segoe UI", sans-serif !important;

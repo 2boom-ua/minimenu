@@ -21,7 +21,7 @@ A compact menu that appears when you select text on a webpage. It provides quick
 - **Theme-aware** light/dark mode support.
 - **Disable extension on specific domains** — disable extension on specific sites via context menu.
 - **Switch between vertical and horizontal menu layout** — choose your preferred popup style via context menu.
-- **Long press on Copy button** — performs "clean copy": pasted text is automatically stripped of extra line breaks, empty lines, and leading/trailing spaces, merging soft-wrapped lines into a single paragraph while preserving intentional paragraph breaks (sentence endings, list markers, quoted text). A tooltip with "Copied (clean)!" appears briefly at the popup's last position to confirm the action.
+- **Long press on Copy button** — performs "clean copy": pasted text is automatically stripped of extra line breaks, empty lines, and leading/trailing spaces, merging soft-wrapped lines into a single paragraph while preserving intentional paragraph breaks (sentence endings, list markers, quoted text).
 
 ## Supported content
 

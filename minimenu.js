@@ -407,6 +407,7 @@ function showTooltip(message) {
         padding: 6px 10px !important;
         font-size: 14px !important;
         font-family: "Segoe UI Variable", "Segoe UI", sans-serif !important;
+        font-weight: 400 !important;
         color: var(--icon-color) !important;
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.17) !important;
         z-index: 2147483647 !important;

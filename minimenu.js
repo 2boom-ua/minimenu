@@ -517,7 +517,7 @@ function injectStyles() {
             --bg-popup: #ffffff;
             --border-popup: #d1d5db;
             --bg-btn-hover: #e0e0e0;
-            --icon-color: #4a4a4a;
+            --icon-color: #3d3d3d;
         }
 
         @media (prefers-color-scheme: dark) {

@@ -416,8 +416,10 @@ function showTooltip(message) {
     `;
 
     if (lastPopupPosition) {
-        tooltip.style.left = lastPopupPosition.left + 'px';
-        tooltip.style.top = lastPopupPosition.top + 'px';
+        var viewportTop = lastPopupPosition.top - window.scrollY;
+        var viewportLeft = lastPopupPosition.left - window.scrollX;
+        tooltip.style.left = viewportLeft + 'px';
+        tooltip.style.top = viewportTop + 'px';
     } else {
         tooltip.style.left = '50%';
         tooltip.style.top = '50%';

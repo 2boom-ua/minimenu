@@ -34,5 +34,8 @@
   },
   "share": {
     "message": "Share"
+  },
+  "copied_clean": {
+    "message": "Copied (clean)!"
   }
 }

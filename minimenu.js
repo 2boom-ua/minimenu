@@ -21,6 +21,8 @@ let lastSelectionRects = null;
 let savedInputElement = null;
 let savedMousePosition = null;
 let isHorizontalLayout = false;
+let copyLongPressTimer = null;
+let isCopyLongPress = false;
 
 const STORAGE_KEY = 'disabledSites';
 const EDITABLE_DISABLED_KEY = 'disabledEditableSites';
@@ -99,6 +101,7 @@ function createIconButton(iconPath, altText) {
         flex-shrink: 0 !important;
         color: var(--icon-color) !important;
         transform: translateZ(0) !important;
+        cursor: pointer !important;
     `;
     icon.setAttribute('aria-label', altText);
 
@@ -144,6 +147,7 @@ function createLabeledButton(iconPath, altText, labelText) {
         background-position: center !important;
         flex-shrink: 0 !important;
         color: var(--icon-color) !important;
+        cursor: pointer !important;
     `;
     icon.setAttribute('aria-label', altText);
 
@@ -168,6 +172,7 @@ function createLabeledButton(iconPath, altText, labelText) {
         line-height: 1.0 !important;
         letter-spacing: normal !important;
         text-transform: none !important;
+        cursor: pointer !important;
     `;
     label.textContent = labelText;
 
@@ -334,6 +339,105 @@ function handleCopyAction() {
     }
 
     navigator.clipboard.writeText(text).catch(function() {});
+}
+
+function cleanText(text) {
+    if (!text) return '';
+    var lines = text.split('\n');
+    var cleanedLines = [];
+    var i = 0;
+    while (i < lines.length) {
+        var currentLine = lines[i].trim();
+        if (currentLine.length === 0) {
+            i++;
+            continue;
+        }
+        var nextLine = (i + 1 < lines.length) ? lines[i + 1].trim() : '';
+        var isHardBreak = false;
+        var endsWithPunctuation = /[.!?:…]$/.test(currentLine);
+        var nextStartsWithCapital = /^[A-ZА-ЯЄІЇҐ]/.test(nextLine);
+        var nextStartsWithMarker = /^[\d•\-*]\s/.test(nextLine) || /^\d+\./.test(nextLine);
+        var nextStartsWithQuote = /^["'«»]/.test(nextLine);
+        if (endsWithPunctuation || nextStartsWithCapital || nextStartsWithMarker || nextStartsWithQuote) {
+            isHardBreak = true;
+        }
+        if (nextLine.length > 0 && isHardBreak) {
+            cleanedLines.push(currentLine);
+            i++;
+        } else if (nextLine.length > 0 && !isHardBreak) {
+            var merged = currentLine + ' ' + nextLine;
+            lines[i + 1] = merged;
+            i++;
+        } else {
+            cleanedLines.push(currentLine);
+            i++;
+        }
+    }
+    return cleanedLines.join('\n');
+}
+
+function handleCleanCopyAction() {
+    var text = getInputSelectedText();
+    if (!text) {
+        return;
+    }
+    var cleanedText = cleanText(text);
+    removePopup();
+
+    var selection = window.getSelection();
+    if (selection) {
+        selection.removeAllRanges();
+    }
+
+    navigator.clipboard.writeText(cleanedText).catch(function() {});
+
+    var message = getMessage('copied_clean') || 'Copied (clean)!';
+    showTooltip(message);
+}
+
+function showTooltip(message) {
+    var tooltip = document.createElement('div');
+    tooltip.className = 'copy-tooltip';
+    tooltip.textContent = message;
+    tooltip.style.cssText = `
+        position: fixed !important;
+        background: var(--bg-popup) !important;
+        border: 1px solid var(--border-popup) !important;
+        border-radius: 8px !important;
+        padding: 8px 16px !important;
+        font-size: 14px !important;
+        font-family: "Segoe UI Variable", "Segoe UI", sans-serif !important;
+        color: var(--icon-color) !important;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.17) !important;
+        z-index: 2147483647 !important;
+        pointer-events: none !important;
+        opacity: 0 !important;
+        transition: opacity 0.2s ease !important;
+    `;
+
+    if (lastPopupPosition) {
+        tooltip.style.left = lastPopupPosition.left + 'px';
+        tooltip.style.top = lastPopupPosition.top + 'px';
+    } else {
+        tooltip.style.left = '50%';
+        tooltip.style.top = '50%';
+        tooltip.style.transform = 'translate(-50%, -50%)';
+    }
+
+    document.body.appendChild(tooltip);
+
+    requestAnimationFrame(function() {
+        tooltip.style.opacity = '1';
+    });
+
+    setTimeout(function() {
+        tooltip.style.opacity = '0';
+        setTimeout(function() {
+            if (tooltip.parentNode) {
+                tooltip.parentNode.removeChild(tooltip);
+            }
+        }, 200);
+    }, 1500);
 }
 
 function handleSearchAction() {
@@ -795,8 +899,8 @@ async function createPopup(event) {
     const searchLabel = getMessage('search');
     const copyLabel = getMessage('copy');
     const shareLabel = getMessage('share') || 'Share';
-    const pasteLabel = getMessage('paste') || 'Вставити';
-    const cutLabel = getMessage('cut') || 'Вирізати';
+    const pasteLabel = getMessage('paste') || 'Paste';
+    const cutLabel = getMessage('cut') || 'Cut';
 
     const defaultState = document.createElement('div');
     defaultState.className = 'menu-state default-state';
@@ -825,15 +929,30 @@ async function createPopup(event) {
                 handleCutAction(e);
             });
 
-            copyBtn.addEventListener('mousedown', function(e) {
-                savedInputElement = savedInputElement || document.activeElement;
-                e.preventDefault();
-                e.stopPropagation();
-            });
-
             copyBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
                 handleCopyAction();
+            });
+
+            copyBtn.addEventListener('mousedown', function(e) {
+                if (e.button !== 0) return;
+                isCopyLongPress = false;
+                copyLongPressTimer = setTimeout(function() {
+                    isCopyLongPress = true;
+                    handleCleanCopyAction();
+                }, 500);
+            });
+
+            copyBtn.addEventListener('mouseup', function(e) {
+                if (e.button !== 0) return;
+                clearTimeout(copyLongPressTimer);
+                if (!isCopyLongPress) {
+                    handleCopyAction();
+                }
+            });
+
+            copyBtn.addEventListener('mouseleave', function() {
+                clearTimeout(copyLongPressTimer);
             });
 
             pasteBtn.addEventListener('mousedown', function(e) {
@@ -877,26 +996,56 @@ async function createPopup(event) {
                 handleCutAction(e);
             });
 
-            copyBtnDefault.addEventListener('mousedown', function(e) {
-                savedInputElement = savedInputElement || document.activeElement;
-                e.preventDefault();
-                e.stopPropagation();
-            });
-
             copyBtnDefault.addEventListener('click', function(e) {
                 e.stopPropagation();
                 handleCopyAction();
             });
 
-            copyBtnHover.addEventListener('mousedown', function(e) {
-                savedInputElement = savedInputElement || document.activeElement;
-                e.preventDefault();
-                e.stopPropagation();
+            copyBtnDefault.addEventListener('mousedown', function(e) {
+                if (e.button !== 0) return;
+                isCopyLongPress = false;
+                copyLongPressTimer = setTimeout(function() {
+                    isCopyLongPress = true;
+                    handleCleanCopyAction();
+                }, 500);
+            });
+
+            copyBtnDefault.addEventListener('mouseup', function(e) {
+                if (e.button !== 0) return;
+                clearTimeout(copyLongPressTimer);
+                if (!isCopyLongPress) {
+                    handleCopyAction();
+                }
+            });
+
+            copyBtnDefault.addEventListener('mouseleave', function() {
+                clearTimeout(copyLongPressTimer);
             });
 
             copyBtnHover.addEventListener('click', function(e) {
                 e.stopPropagation();
                 handleCopyAction();
+            });
+
+            copyBtnHover.addEventListener('mousedown', function(e) {
+                if (e.button !== 0) return;
+                isCopyLongPress = false;
+                copyLongPressTimer = setTimeout(function() {
+                    isCopyLongPress = true;
+                    handleCleanCopyAction();
+                }, 500);
+            });
+
+            copyBtnHover.addEventListener('mouseup', function(e) {
+                if (e.button !== 0) return;
+                clearTimeout(copyLongPressTimer);
+                if (!isCopyLongPress) {
+                    handleCopyAction();
+                }
+            });
+
+            copyBtnHover.addEventListener('mouseleave', function() {
+                clearTimeout(copyLongPressTimer);
             });
 
             pasteBtnDefault.addEventListener('mousedown', function(e) {
@@ -937,6 +1086,27 @@ async function createPopup(event) {
             copyBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
                 handleCopyAction();
+            });
+
+            copyBtn.addEventListener('mousedown', function(e) {
+                if (e.button !== 0) return;
+                isCopyLongPress = false;
+                copyLongPressTimer = setTimeout(function() {
+                    isCopyLongPress = true;
+                    handleCleanCopyAction();
+                }, 500);
+            });
+
+            copyBtn.addEventListener('mouseup', function(e) {
+                if (e.button !== 0) return;
+                clearTimeout(copyLongPressTimer);
+                if (!isCopyLongPress) {
+                    handleCopyAction();
+                }
+            });
+
+            copyBtn.addEventListener('mouseleave', function() {
+                clearTimeout(copyLongPressTimer);
             });
 
             searchBtn.addEventListener('click', function(e) {
@@ -987,9 +1157,51 @@ async function createPopup(event) {
                 handleCopyAction();
             });
 
+            copyBtnDefault.addEventListener('mousedown', function(e) {
+                if (e.button !== 0) return;
+                isCopyLongPress = false;
+                copyLongPressTimer = setTimeout(function() {
+                    isCopyLongPress = true;
+                    handleCleanCopyAction();
+                }, 500);
+            });
+
+            copyBtnDefault.addEventListener('mouseup', function(e) {
+                if (e.button !== 0) return;
+                clearTimeout(copyLongPressTimer);
+                if (!isCopyLongPress) {
+                    handleCopyAction();
+                }
+            });
+
+            copyBtnDefault.addEventListener('mouseleave', function() {
+                clearTimeout(copyLongPressTimer);
+            });
+
             copyBtnHover.addEventListener('click', function(e) {
                 e.stopPropagation();
                 handleCopyAction();
+            });
+
+            copyBtnHover.addEventListener('mousedown', function(e) {
+                if (e.button !== 0) return;
+                isCopyLongPress = false;
+                copyLongPressTimer = setTimeout(function() {
+                    isCopyLongPress = true;
+                    handleCleanCopyAction();
+                }, 500);
+            });
+
+            copyBtnHover.addEventListener('mouseup', function(e) {
+                if (e.button !== 0) return;
+                clearTimeout(copyLongPressTimer);
+                if (!isCopyLongPress) {
+                    handleCopyAction();
+                }
+            });
+
+            copyBtnHover.addEventListener('mouseleave', function() {
+                clearTimeout(copyLongPressTimer);
             });
 
             searchBtnDefault.addEventListener('click', function(e) {
@@ -1045,6 +1257,9 @@ function removePopup() {
         popup.style.opacity = '0';
     }
 
+    // Save position before destroying
+    var savedPosition = lastPopupPosition;
+
     destroyPopup();
 
     selectedText = '';
@@ -1053,6 +1268,9 @@ function removePopup() {
     lastSelectionRects = null;
     savedInputElement = null;
     savedMousePosition = null;
+
+    // Restore position for tooltip
+    lastPopupPosition = savedPosition;
 
     setTimeout(function() {
         closedByTimer = false;

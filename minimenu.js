@@ -689,7 +689,7 @@ function calculatePopupPosition(rects) {
     const popupWidth = popup ? popup.offsetWidth : 150;
     const popupHeight = popup ? popup.offsetHeight : 120;
 
-    const gap = 8;
+    const gap = 6;
     const padding = 5;
 
     const firstCenterX = firstRect.left + firstRect.width / 2;

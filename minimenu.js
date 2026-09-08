@@ -515,7 +515,7 @@ function injectStyles() {
     style.textContent = `
         :root {
             --bg-popup: #ffffff;
-            --border-popup: #d1d5db;
+            --border-popup: #E5E5E5;
             --bg-btn-hover: #e0e0e0;
             --icon-color: #3d3d3d;
         }

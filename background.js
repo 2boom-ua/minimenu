@@ -396,27 +396,6 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
     return true;
   }
   
-  if (message.action === 'get_disabled_sites') {
-    getDisabledSites(function(sites) {
-      sendResponse({ sites: sites || [] });
-    });
-    return true;
-  }
-  
-  if (message.action === 'get_disabled_editable_sites') {
-    getDisabledEditableSites(function(sites) {
-      sendResponse({ sites: sites || [] });
-    });
-    return true;
-  }
-  
-  if (message.action === 'get_layout') {
-    getLayout(function(isHorizontal) {
-      sendResponse({ horizontal: isHorizontal });
-    });
-    return true;
-  }
-  
   if (message.action === 'content_script_ready' && message.hostname) {
     createOrUpdateMenu(message.hostname);
     createOrUpdateEditableMenu(message.hostname);

@@ -23,20 +23,14 @@ let savedMousePosition = null;
 let isHorizontalLayout = false;
 let copyLongPressTimer = null;
 let isCopyLongPress = false;
+let popupBuiltForEditable = null;
+let popupBuiltForHorizontal = null;
 
 const STORAGE_KEY = 'disabledSites';
 const EDITABLE_DISABLED_KEY = 'disabledEditableSites';
 const LAYOUT_KEY = 'horizontalLayout';
 
 const ICON_PATH = 'icons/'
-
-function isContextValid() {
-    try {
-        return !!chrome.runtime.id;
-    } catch (e) {
-        return false;
-    }
-}
 
 function getCurrentHostname() {
     try {
@@ -65,7 +59,7 @@ function getMessage(key) {
 }
 
 function getIconUrl(iconName) {
-    if (!isContextValid()) {
+    if (!isExtensionContextValid()) {
         removePopup();
         return '';
     }
@@ -417,10 +411,8 @@ function showTooltip(message) {
     `;
 
     if (lastPopupPosition) {
-        var viewportTop = lastPopupPosition.top - window.scrollY;
-        var viewportLeft = lastPopupPosition.left - window.scrollX;
-        tooltip.style.left = viewportLeft + 'px';
-        tooltip.style.top = viewportTop + 'px';
+        tooltip.style.left = lastPopupPosition.left + 'px';
+        tooltip.style.top = lastPopupPosition.top + 'px';
     } else {
         tooltip.style.left = '50%';
         tooltip.style.top = '50%';
@@ -489,6 +481,8 @@ function destroyPopup() {
         popup.remove();
         popup = null;
     }
+    popupBuiltForEditable = null;
+    popupBuiltForHorizontal = null;
 }
 
 function resetPopupTimer() {
@@ -529,8 +523,12 @@ function injectStyles() {
             }
         }
 
+        #text-mini-menu, #text-mini-menu * {
+            box-sizing: border-box !important;
+        }
+
         .text-mini-menu {
-            position: absolute !important;
+            position: fixed !important;
             display: flex !important;
             flex-direction: column !important;
             gap: 6px !important;
@@ -683,8 +681,6 @@ function calculatePopupPosition(rects) {
 
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
-    const scrollX = window.scrollX || window.pageXOffset || 0;
-    const scrollY = window.scrollY || window.pageYOffset || 0;
 
     const popupWidth = popup ? popup.offsetWidth : 150;
     const popupHeight = popup ? popup.offsetHeight : 120;
@@ -696,38 +692,44 @@ function calculatePopupPosition(rects) {
     const lastCenterX = lastRect.left + lastRect.width / 2;
     const avgCenterX = (firstCenterX + lastCenterX) / 2;
 
+    // NOTE: all coordinates below are viewport-relative (like getClientRects()),
+    // because the popup is positioned with `position: fixed`. Previously this
+    // added window.scrollX/scrollY to convert to document coordinates for use
+    // with `position: absolute`, but that breaks on pages (e.g. booking.com)
+    // where an ancestor of <body> has `transform`/`filter`/`contain`/`will-change`,
+    // which creates a new containing block and makes document-coordinate math wrong.
     let top;
     let anchorY;
 
-    const topAbove = firstRect.top + scrollY - popupHeight - gap;
-    const fitsAbove = topAbove >= scrollY + padding;
+    const topAbove = firstRect.top - popupHeight - gap;
+    const fitsAbove = topAbove >= padding;
 
-    const topBelow = lastRect.bottom + scrollY + gap;
-    const fitsBelow = topBelow + popupHeight <= viewportHeight + scrollY - padding;
+    const topBelow = lastRect.bottom + gap;
+    const fitsBelow = topBelow + popupHeight <= viewportHeight - padding;
 
     if (fitsAbove) {
         top = topAbove;
-        anchorY = firstRect.top + scrollY;
+        anchorY = firstRect.top;
     } else if (fitsBelow) {
         top = topBelow;
-        anchorY = lastRect.bottom + scrollY;
+        anchorY = lastRect.bottom;
     } else {
-        const spaceAbove = firstRect.top + scrollY - padding;
-        const spaceBelow = viewportHeight + scrollY - padding - (lastRect.bottom + scrollY);
+        const spaceAbove = firstRect.top - padding;
+        const spaceBelow = viewportHeight - padding - lastRect.bottom;
         if (spaceAbove >= spaceBelow) {
             top = topAbove;
-            anchorY = firstRect.top + scrollY;
+            anchorY = firstRect.top;
         } else {
             top = topBelow;
-            anchorY = lastRect.bottom + scrollY;
+            anchorY = lastRect.bottom;
         }
     }
 
-    if (top < scrollY + padding) {
-        top = scrollY + padding;
+    if (top < padding) {
+        top = padding;
     }
-    if (top + popupHeight > viewportHeight + scrollY - padding) {
-        top = viewportHeight + scrollY - popupHeight - padding;
+    if (top + popupHeight > viewportHeight - padding) {
+        top = viewportHeight - popupHeight - padding;
     }
 
     let left = avgCenterX - popupWidth / 2;
@@ -769,7 +771,7 @@ function getSelectionRects() {
 }
 
 function positionPopup() {
-    if (!isContextValid() || !popup) return;
+    if (!isExtensionContextValid() || !popup) return;
 
     if (savedMousePosition) {
         const popupRect = popup.getBoundingClientRect();
@@ -822,7 +824,7 @@ function positionPopup() {
                     r.height === p.height;
             });
         if (sameRects && lastPopupPosition) {
-            popup.style.position = 'absolute';
+            popup.style.position = 'fixed';
             popup.style.left = lastPopupPosition.left + 'px';
             popup.style.top = lastPopupPosition.top + 'px';
             return;
@@ -836,7 +838,7 @@ function positionPopup() {
         return;
     }
 
-    popup.style.position = 'absolute';
+    popup.style.position = 'fixed';
     popup.style.left = position.left + 'px';
     popup.style.top = position.top + 'px';
     lastPopupPosition = { top: position.top, left: position.left };
@@ -855,6 +857,22 @@ async function updateSelectionPopup() {
         }
     }
 
+    // If a popup already exists and was built for the same editable-state
+    // and layout, the button set would come out identical — a full
+    // destroy+recreate is unnecessary work (rebuilding every icon button)
+    // for what is really just a position update. Reuse it and reposition.
+    if (popup && popupBuiltForEditable === isSelectionInEditable() && popupBuiltForHorizontal === isHorizontalLayout) {
+        // The selection itself changed, so any cached rects from the previous
+        // selection are no longer valid — force positionPopup() to recompute
+        // from scratch instead of possibly comparing against stale cache
+        // (that cache exists for repeated calls on an *unchanged* selection,
+        // e.g. on scroll/resize, not for a switch to different text).
+        lastSelectionRects = null;
+        positionPopup();
+        resetPopupTimer();
+        return;
+    }
+
     isCreatingPopup = true;
 
     try {
@@ -867,8 +885,8 @@ async function updateSelectionPopup() {
     }
 }
 
-async function createPopup(event) {
-    if (!isContextValid()) return;
+async function createPopup() {
+    if (!isExtensionContextValid()) return;
     if (isClosing) return;
     
     const hostname = getCurrentHostname();
@@ -912,6 +930,8 @@ async function createPopup(event) {
     hoverState.className = 'menu-state hover-state';
 
     const isEditable = isSelectionInEditable();
+    popupBuiltForEditable = isEditable;
+    popupBuiltForHorizontal = isHorizontalLayout;
 
     if (isEditable) {
         if (isHorizontalLayout) {
@@ -1307,7 +1327,7 @@ function handleReposition() {
 }
 
 document.addEventListener('keydown', function(e) {
-    if (!isContextValid()) return;
+    if (!isExtensionContextValid()) return;
     if (isClosing) return;
     if (!popup) return;
 
@@ -1345,7 +1365,7 @@ if (window.visualViewport) {
 }
 
 document.addEventListener('mousedown', function(e) {
-    if (!isContextValid()) return;
+    if (!isExtensionContextValid()) return;
 
     if (popup && popup.contains(e.target)) {
         return;
@@ -1394,7 +1414,7 @@ document.addEventListener('keydown', function(e) {
 });
 
 document.addEventListener('selectionchange', function() {
-    if (!isContextValid()) return;
+    if (!isExtensionContextValid()) return;
     if (isClosing) return;
 
     if (!isMouseSelection) {
@@ -1457,7 +1477,7 @@ document.addEventListener('selectionchange', function() {
 });
 
 document.addEventListener('mouseup', async function(e) {
-    if (!isContextValid()) return;
+    if (!isExtensionContextValid()) return;
 
     if (clickOnSelectedText) {
         clickOnSelectedText = false;
@@ -1524,7 +1544,7 @@ document.addEventListener('mouseup', async function(e) {
 });
 
 document.addEventListener('dblclick', async function(e) {
-    if (!isContextValid()) {
+    if (!isExtensionContextValid()) {
         return;
     }
     if (isClosing) {

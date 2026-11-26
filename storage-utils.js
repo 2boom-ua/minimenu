@@ -54,7 +54,6 @@ function setSyncedValue(key, value) {
             resolve();
             return;
         }
-
         var data = {};
         data[key] = value;
         chrome.storage.sync.set(data, function() {
@@ -63,6 +62,8 @@ function setSyncedValue(key, value) {
                     if (chrome.runtime.lastError) {
                         console.warn('[MiniMenu] Failed to save to sync and local for key:', key);
                     }
+                    // [ADDED] Remove stale sync value so getSyncedValue falls back to local
+                    chrome.storage.sync.remove(key, function() {});
                     resolve();
                 });
             } else {

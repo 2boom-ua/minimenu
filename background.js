@@ -256,47 +256,69 @@ function createAllChildMenus() {
 
 // Handle context menu click
 function handleMenuClick(info, tab) {
-  if (info.menuItemId === MENU_ID_SITE) {
-    const hostname = getHostname(tab.url);
-    if (!hostname) {
+  const resolveTabUrl = function(callback) {
+    if (tab && tab.url) {
+      callback(tab.url);
       return;
     }
-    
-    getDisabledSites(function(sites) {
-      let newSites = sites || [];
-      const index = newSites.indexOf(hostname);
-      
-      if (index > -1) {
-        newSites.splice(index, 1);
-      } else {
-        newSites.push(hostname);
+    if (!tab || !tab.id) {
+      callback(null);
+      return;
+    }
+    chrome.tabs.get(tab.id, function(fullTab) {
+      if (chrome.runtime.lastError || !fullTab || !fullTab.url) {
+        callback(null);
+        return;
+      }
+      callback(fullTab.url);
+    });
+  };
+
+  if (info.menuItemId === MENU_ID_SITE) {
+    resolveTabUrl(function(url) {
+      const hostname = getHostname(url);
+      if (!hostname) {
+        return;
       }
       
-      saveDisabledSites(newSites, function() {
-        createOrUpdateMenu(hostname);
+      getDisabledSites(function(sites) {
+        let newSites = sites || [];
+        const index = newSites.indexOf(hostname);
+        
+        if (index > -1) {
+          newSites.splice(index, 1);
+        } else {
+          newSites.push(hostname);
+        }
+        
+        saveDisabledSites(newSites, function() {
+          createOrUpdateMenu(hostname);
+        });
       });
     });
     return;
   }
   
   if (info.menuItemId === MENU_ID_EDITABLE) {
-    const hostname = getHostname(tab.url);
-    if (!hostname) {
-      return;
-    }
-    
-    getDisabledEditableSites(function(sites) {
-      let newSites = sites || [];
-      const index = newSites.indexOf(hostname);
-      
-      if (index > -1) {
-        newSites.splice(index, 1);
-      } else {
-        newSites.push(hostname);
+    resolveTabUrl(function(url) {
+      const hostname = getHostname(url);
+      if (!hostname) {
+        return;
       }
       
-      saveDisabledEditableSites(newSites, function() {
-        createOrUpdateEditableMenu(hostname);
+      getDisabledEditableSites(function(sites) {
+        let newSites = sites || [];
+        const index = newSites.indexOf(hostname);
+        
+        if (index > -1) {
+          newSites.splice(index, 1);
+        } else {
+          newSites.push(hostname);
+        }
+        
+        saveDisabledEditableSites(newSites, function() {
+          createOrUpdateEditableMenu(hostname);
+        });
       });
     });
     return;
@@ -396,9 +418,19 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
     return true;
   }
   
-  if (message.action === 'content_script_ready' && message.hostname) {
-    createOrUpdateMenu(message.hostname);
-    createOrUpdateEditableMenu(message.hostname);
+  if (message.action === 'content_script_ready') {
+    // [CHANGED] Ignore iframes (frameId > 0) — their hostname differs from tab.url
+    // and would overwrite the correct menu title for the top-level site.
+    // Use sender.tab.url (authoritative) instead of message.hostname.
+    if (sender.frameId !== 0 || !sender.tab || !sender.tab.url) {
+      sendResponse({ success: true });
+      return true;
+    }
+    const hostname = getHostname(sender.tab.url);
+    if (hostname) {
+      createOrUpdateMenu(hostname);
+      createOrUpdateEditableMenu(hostname);
+    }
     sendResponse({ success: true });
     return true;
   }

@@ -534,7 +534,7 @@ function injectStyles() {
             gap: 6px !important;
             background: var(--bg-popup) !important;
             border: 1px solid var(--border-popup) !important;
-            border-radius: 10px !important;
+            border-radius: 12px !important;
             padding: 4px 4px !important;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.17) !important;
             z-index: 2147483647 !important;
@@ -614,7 +614,7 @@ function injectStyles() {
             display: flex !important;
             align-items: center !important;
             justify-content: flex-start !important;
-            border-radius: 6px !important;
+            border-radius: 9px !important;
             transition: background-color 120ms ease !important;
             flex-shrink: 0 !important;
         }
@@ -631,7 +631,7 @@ function injectStyles() {
 
             background: transparent !important;
             border: none !important;
-            border-radius: 6px !important;
+            border-radius: 9px !important;
 
             cursor: pointer !important;
             outline: none !important;
@@ -668,6 +668,20 @@ function injectStyles() {
             line-height: 1.0 !important;
             letter-spacing: normal !important;
             text-transform: none !important;
+        }
+
+        .menu-divider {
+            display: none !important;
+            width: 1px !important;
+            height: 18px !important; /* Фіксована висота лінії */
+            align-self: center !important; /* Центруємо по вертикалі */
+            background-color: var(--border-popup) !important;
+            margin: 0 4px !important; /* Тільки горизонтальні відступи для простору між кнопками */
+            flex-shrink: 0 !important;
+        }
+
+        .text-mini-menu.horizontal .menu-divider {
+            display: block !important;
         }
     `;
     document.head.appendChild(style);
@@ -939,8 +953,16 @@ async function createPopup() {
             const cutBtn = createLabeledButton(ICON_PATH + 'cut.svg', cutLabel, cutLabel);
             defaultState.appendChild(cutBtn);
 
+            const divEditable1 = document.createElement('div');
+            divEditable1.className = 'menu-divider';
+            defaultState.appendChild(divEditable1);
+
             const copyBtn = createLabeledButton(ICON_PATH + 'copy.svg', copyLabel, copyLabel);
             defaultState.appendChild(copyBtn);
+
+            const divEditable2 = document.createElement('div');
+            divEditable2.className = 'menu-divider';
+            defaultState.appendChild(divEditable2);
 
             const pasteBtn = createLabeledButton(ICON_PATH + 'paste.svg', pasteLabel, pasteLabel);
             defaultState.appendChild(pasteBtn);
@@ -1094,10 +1116,18 @@ async function createPopup() {
             const copyBtn = createLabeledButton(ICON_PATH + 'copy.svg', copyLabel, copyLabel);
             defaultState.appendChild(copyBtn);
 
+            const divNonEditable1 = document.createElement('div');
+            divNonEditable1.className = 'menu-divider';
+            defaultState.appendChild(divNonEditable1);
+
             const searchBtn = createLabeledButton(ICON_PATH + 'search.svg', searchLabel, searchLabel);
             defaultState.appendChild(searchBtn);
 
             if (typeof navigator.share === 'function') {
+                const divNonEditable2 = document.createElement('div');
+                divNonEditable2.className = 'menu-divider';
+                defaultState.appendChild(divNonEditable2);
+
                 const shareBtn = createLabeledButton(ICON_PATH + 'share.svg', shareLabel, shareLabel);
                 defaultState.appendChild(shareBtn);
                 shareBtn.addEventListener('click', function(e) {

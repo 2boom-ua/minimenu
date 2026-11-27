@@ -1,0 +1,41 @@
+{
+  "menu_title": {
+    "message": "Text Mini Menu"
+  },
+  "disable_site": {
+    "message": "在此網站上停用"
+  },
+  "enable_site": {
+    "message": "在此網站上啟用"
+  },
+  "disable_editable": {
+    "message": "在此網站上停用可編輯欄位"
+  },
+  "enable_editable": {
+    "message": "在此網站上啟用可編輯欄位"
+  },
+  "switch_horizontal": {
+    "message": "切換至水平版面"
+  },
+  "switch_vertical": {
+    "message": "切換至垂直版面"
+  },
+  "search": {
+    "message": "搜尋"
+  },
+  "copy": {
+    "message": "複製"
+  },
+  "cut": {
+    "message": "剪下"
+  },
+  "paste": {
+    "message": "貼上"
+  },
+  "share": {
+    "message": "分享"
+  },
+  "copied_clean": {
+    "message": "已複製（已清理）！"
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "menu_title": {
+    "message": "Text Mini Menu"
+  },
+  "disable_site": {
+    "message": "Auf dieser Website deaktivieren"
+  },
+  "enable_site": {
+    "message": "Auf dieser Website aktivieren"
+  },
+  "disable_editable": {
+    "message": "Bearbeitbare Felder auf dieser Website deaktivieren"
+  },
+  "enable_editable": {
+    "message": "Bearbeitbare Felder auf dieser Website aktivieren"
+  },
+  "switch_horizontal": {
+    "message": "Zum horizontalen Layout wechseln"
+  },
+  "switch_vertical": {
+    "message": "Zum vertikalen Layout wechseln"
+  },
+  "search": {
+    "message": "Suchen"
+  },
+  "copy": {
+    "message": "Kopieren"
+  },
+  "cut": {
+    "message": "Ausschneiden"
+  },
+  "paste": {
+    "message": "Einfügen"
+  },
+  "share": {
+    "message": "Teilen"
+  },
+  "copied_clean": {
+    "message": "Kopiert (sauber)!"
+  }
+}

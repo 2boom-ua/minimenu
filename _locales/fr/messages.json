@@ -1,0 +1,41 @@
+{
+  "menu_title": {
+    "message": "Text Mini Menu"
+  },
+  "disable_site": {
+    "message": "Désactiver sur ce site"
+  },
+  "enable_site": {
+    "message": "Activer sur ce site"
+  },
+  "disable_editable": {
+    "message": "Désactiver les champs modifiables sur ce site"
+  },
+  "enable_editable": {
+    "message": "Activer les champs modifiables sur ce site"
+  },
+  "switch_horizontal": {
+    "message": "Passer à la disposition horizontale"
+  },
+  "switch_vertical": {
+    "message": "Passer à la disposition verticale"
+  },
+  "search": {
+    "message": "Rechercher"
+  },
+  "copy": {
+    "message": "Copier"
+  },
+  "cut": {
+    "message": "Couper"
+  },
+  "paste": {
+    "message": "Coller"
+  },
+  "share": {
+    "message": "Partager"
+  },
+  "copied_clean": {
+    "message": "Copié (propre) !"
+  }
+}

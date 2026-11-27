@@ -1,0 +1,41 @@
+{
+  "menu_title": {
+    "message": "Text Mini Menu"
+  },
+  "disable_site": {
+    "message": "在此网站上禁用"
+  },
+  "enable_site": {
+    "message": "在此网站上启用"
+  },
+  "disable_editable": {
+    "message": "在此网站上禁用可编辑字段"
+  },
+  "enable_editable": {
+    "message": "在此网站上启用可编辑字段"
+  },
+  "switch_horizontal": {
+    "message": "切换到水平布局"
+  },
+  "switch_vertical": {
+    "message": "切换到垂直布局"
+  },
+  "search": {
+    "message": "搜索"
+  },
+  "copy": {
+    "message": "复制"
+  },
+  "cut": {
+    "message": "剪切"
+  },
+  "paste": {
+    "message": "粘贴"
+  },
+  "share": {
+    "message": "分享"
+  },
+  "copied_clean": {
+    "message": "已复制（已清理）！"
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "menu_title": {
+    "message": "Text Mini Menu"
+  },
+  "disable_site": {
+    "message": "Disattiva su questo sito"
+  },
+  "enable_site": {
+    "message": "Attiva su questo sito"
+  },
+  "disable_editable": {
+    "message": "Disattiva i campi modificabili su questo sito"
+  },
+  "enable_editable": {
+    "message": "Attiva i campi modificabili su questo sito"
+  },
+  "switch_horizontal": {
+    "message": "Passa al layout orizzontale"
+  },
+  "switch_vertical": {
+    "message": "Passa al layout verticale"
+  },
+  "search": {
+    "message": "Cerca"
+  },
+  "copy": {
+    "message": "Copia"
+  },
+  "cut": {
+    "message": "Taglia"
+  },
+  "paste": {
+    "message": "Incolla"
+  },
+  "share": {
+    "message": "Condividi"
+  },
+  "copied_clean": {
+    "message": "Copiato (pulito)!"
+  }
+}

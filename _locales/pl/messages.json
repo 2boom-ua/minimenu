@@ -1,0 +1,41 @@
+{
+  "menu_title": {
+    "message": "Text Mini Menu"
+  },
+  "disable_site": {
+    "message": "Wyłącz na tej stronie"
+  },
+  "enable_site": {
+    "message": "Włącz na tej stronie"
+  },
+  "disable_editable": {
+    "message": "Wyłącz pola edycyjne na tej stronie"
+  },
+  "enable_editable": {
+    "message": "Włącz pola edycyjne na tej stronie"
+  },
+  "switch_horizontal": {
+    "message": "Przełącz na układ poziomy"
+  },
+  "switch_vertical": {
+    "message": "Przełącz na układ pionowy"
+  },
+  "search": {
+    "message": "Szukaj"
+  },
+  "copy": {
+    "message": "Kopiuj"
+  },
+  "cut": {
+    "message": "Wytnij"
+  },
+  "paste": {
+    "message": "Wklej"
+  },
+  "share": {
+    "message": "Udostępnij"
+  },
+  "copied_clean": {
+    "message": "Skopiowano (czysty tekst)!"
+  }
+}

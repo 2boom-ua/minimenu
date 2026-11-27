@@ -84,17 +84,13 @@ function createIconButton(iconPath, altText) {
     const icon = document.createElement('span');
     icon.className = 'menu-icon';
     icon.style.cssText = `
-        all: initial !important;
         display: inline-block !important;
-        width: 18px !important;
-        height: 18px !important;
         background-image: url('${iconUrl}') !important;
         background-size: contain !important;
         background-repeat: no-repeat !important;
         background-position: center !important;
         flex-shrink: 0 !important;
         color: var(--icon-color) !important;
-        transform: translateZ(0) !important;
         cursor: pointer !important;
     `;
     icon.setAttribute('aria-label', altText);
@@ -119,28 +115,23 @@ function createLabeledButton(iconPath, altText, labelText) {
     const iconWrapper = document.createElement('span');
     iconWrapper.className = 'icon-wrapper';
     iconWrapper.style.cssText = `
-        all: initial !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
         flex-shrink: 0 !important;
-        width: 18px !important;
-        height: 18px !important;
     `;
 
     const icon = document.createElement('span');
     icon.className = 'menu-icon';
     icon.style.cssText = `
-        all: initial !important;
         display: inline-block !important;
-        width: 18px !important;
-        height: 18px !important;
         background-image: url('${iconUrl}') !important;
         background-size: contain !important;
         background-repeat: no-repeat !important;
         background-position: center !important;
         flex-shrink: 0 !important;
         color: var(--icon-color) !important;
+        transform: translateZ(0) !important;
         cursor: pointer !important;
     `;
     icon.setAttribute('aria-label', altText);
@@ -527,11 +518,13 @@ function injectStyles() {
             box-sizing: border-box !important;
         }
 
+        /* =========================================
+           BASE STYLES (Shared for both modes)
+           ========================================= */
+
         .text-mini-menu {
             position: fixed !important;
             display: flex !important;
-            flex-direction: column !important;
-            gap: 6px !important;
             background: var(--bg-popup) !important;
             border: 1px solid var(--border-popup) !important;
             border-radius: 12px !important;
@@ -542,16 +535,125 @@ function injectStyles() {
             transition: background 0.2s, border-color 0.2s !important;
         }
         
-    @media (prefers-color-scheme: dark) {
-        .text-mini-menu {
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8),
-                        0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+        @media (prefers-color-scheme: dark) {
+            .text-mini-menu {
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8),
+                            0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+            }
         }
-    }
+
+        .menu-btn-wrapper {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            border-radius: 9px !important;
+            transition: background-color 120ms ease !important;
+            flex-shrink: 0 !important;
+        }
+
+        .menu-btn {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            height: 30px !important;
+            margin: 0 !important;
+            background: transparent !important;
+            border: none !important;
+            border-radius: 9px !important;
+            cursor: pointer !important;
+            outline: none !important;
+            box-shadow: none !important;
+            flex-shrink: 0 !important;
+        }
+
+        .menu-icon {
+            display: inline-block !important;
+            background-size: contain !important;
+            background-repeat: no-repeat !important;
+            background-position: center !important;
+            flex-shrink: 0 !important;
+        }
+
+        .icon-wrapper {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            flex-shrink: 0 !important;
+        }
+
+        .btn-label {
+            display: inline !important;
+            font-family: "Segoe UI Variable", "Segoe UI", sans-serif !important;
+            font-weight: 400 !important;
+            color: var(--icon-color) !important;
+            white-space: nowrap !important;
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+            text-shadow: none !important;
+            line-height: 1.0 !important;
+            letter-spacing: normal !important;
+            text-transform: none !important;
+        }
+
+        .menu-state {
+            display: flex !important;
+        }
+
+        .default-state {
+            display: flex !important;
+        }
+
+        .hover-state {
+            display: none !important;
+        }
+
+        /* =========================================
+           VERTICAL MODE (Default)
+           ========================================= */
+
+        .text-mini-menu:not(.horizontal) {
+            flex-direction: column !important;
+            gap: 6px !important;
+        }
+
+        .text-mini-menu:not(.horizontal) .menu-state {
+            flex-direction: column !important;
+            gap: 4px !important;
+        }
+
+        .text-mini-menu:not(.horizontal) .menu-btn {
+            gap: 12px !important;
+            padding: 8px 10px !important;
+            width: 100% !important;
+        }
+
+        .text-mini-menu:not(.horizontal) .menu-icon,
+        .text-mini-menu:not(.horizontal) .icon-wrapper {
+            width: 18px !important;
+            height: 18px !important;
+        }
+
+        .text-mini-menu:not(.horizontal) .btn-label {
+            font-size: 13.5px !important;
+        }
+
+        .text-mini-menu:not(.horizontal):hover .default-state {
+            display: none !important;
+        }
+
+        .text-mini-menu:not(.horizontal):hover .hover-state {
+            display: flex !important;
+        }
+
+        /* =========================================
+           HORIZONTAL MODE
+           ========================================= */
 
         .text-mini-menu.horizontal {
             flex-direction: row !important;
-            padding: 4px 4px !important;
             gap: 2px !important;
         }
 
@@ -578,105 +680,27 @@ function injectStyles() {
             display: none !important;
         }
 
-        .text-mini-menu.horizontal .menu-icon {
+        .text-mini-menu.horizontal .menu-icon,
+        .text-mini-menu.horizontal .icon-wrapper {
             width: 16px !important;
             height: 16px !important;
         }
 
         .text-mini-menu.horizontal .btn-label {
-            display: inline !important;
             font-size: 12.5px !important;
         }
 
-        .menu-state {
-            display: flex !important;
-            flex-direction: column !important;
-            gap: 4px !important;
-        }
-
-        .default-state {
-            display: flex !important;
-        }
-
-        .hover-state {
-            display: none !important;
-        }
-
-        .text-mini-menu:not(.horizontal):hover .default-state {
-            display: none !important;
-        }
-
-        .text-mini-menu:not(.horizontal):hover .hover-state {
-            display: flex !important;
-        }
-
-        .menu-btn-wrapper {
-            display: flex !important;
-            align-items: center !important;
-            justify-content: flex-start !important;
-            border-radius: 9px !important;
-            transition: background-color 120ms ease !important;
-            flex-shrink: 0 !important;
-        }
-
-        .menu-btn {
-            display: flex !important;
-            align-items: center !important;
-            justify-content: flex-start !important;
-            gap: 12px !important;
-
-            height: 30px !important;
-            padding: 3px 6px !important;
-            margin: 0 !important;
-
-            background: transparent !important;
-            border: none !important;
-            border-radius: 9px !important;
-
-            cursor: pointer !important;
-            outline: none !important;
-
-            box-shadow: none !important;
-
-            flex-shrink: 0 !important;
-            width: 100% !important;
-        }
-
-        .menu-icon {
-            display: inline-block !important;
-            width: 16px !important;
-            height: 16px !important;
-            background-size: contain !important;
-            background-repeat: no-repeat !important;
-            background-position: center !important;
-            flex-shrink: 0 !important;
-        }
-
-        .btn-label {
-            display: inline !important;
-            font-size: 13.5px !important;
-            font-family: "Segoe UI Variable", "Segoe UI", sans-serif !important;
-            font-weight: 400 !important;
-            color: var(--icon-color) !important;
-            white-space: nowrap !important;
-            background: transparent !important;
-            border: none !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            box-shadow: none !important;
-            text-shadow: none !important;
-            line-height: 1.0 !important;
-            letter-spacing: normal !important;
-            text-transform: none !important;
-        }
+        /* =========================================
+           DIVIDER (Horizontal mode only)
+           ========================================= */
 
         .menu-divider {
             display: none !important;
             width: 1px !important;
-            height: 18px !important; /* Фіксована висота лінії */
-            align-self: center !important; /* Центруємо по вертикалі */
+            height: 18px !important;
+            align-self: center !important;
             background-color: var(--border-popup) !important;
-            margin: 0 2px !important; /* Тільки горизонтальні відступи для простору між кнопками */
+            margin: 0 2px !important;
             flex-shrink: 0 !important;
         }
 

@@ -6,7 +6,7 @@
 
 A compact menu that appears when you select text on a webpage. It provides quick access to useful text actions without getting in your way.
 
-![Version](https://img.shields.io/badge/version-2.8-green.svg)
+![Version](https://img.shields.io/badge/version-3.0-green.svg)
 
 ## Features
 

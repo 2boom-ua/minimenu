@@ -626,7 +626,7 @@ function injectStyles() {
             gap: 12px !important;
 
             height: 30px !important;
-            padding: 4px 8px !important;
+            padding: 3px 6px !important;
             margin: 0 !important;
 
             background: transparent !important;
@@ -644,8 +644,8 @@ function injectStyles() {
 
         .menu-icon {
             display: inline-block !important;
-            width: 18px !important;
-            height: 18px !important;
+            width: 16px !important;
+            height: 16px !important;
             background-size: contain !important;
             background-repeat: no-repeat !important;
             background-position: center !important;
@@ -676,7 +676,7 @@ function injectStyles() {
             height: 18px !important; /* Фіксована висота лінії */
             align-self: center !important; /* Центруємо по вертикалі */
             background-color: var(--border-popup) !important;
-            margin: 0 4px !important; /* Тільки горизонтальні відступи для простору між кнопками */
+            margin: 0 2px !important; /* Тільки горизонтальні відступи для простору між кнопками */
             flex-shrink: 0 !important;
         }
 

@@ -500,16 +500,16 @@ function injectStyles() {
     style.textContent = `
         :root {
             --bg-popup: #ffffff;
-            --border-popup: #E5E5E5;
-            --bg-btn-hover: #e0e0e0;
+            --border-popup: #d5d5d5;
+            --bg-btn-hover: #e5e5e5;
             --icon-color: #3d3d3d;
         }
 
         @media (prefers-color-scheme: dark) {
             :root {
                 --bg-popup: #1f1f1f;
-                --border-popup: #4b4b4b;
-                --bg-btn-hover: #363636;
+                --border-popup: #3a3a3a;
+                --bg-btn-hover: #404040;
                 --icon-color: #d8d8d8;
             }
         }
@@ -659,7 +659,7 @@ function injectStyles() {
 
         .text-mini-menu.horizontal .menu-state {
             flex-direction: row !important;
-            gap: 2px !important;
+            gap: 1px !important;
         }
 
         .text-mini-menu.horizontal .menu-btn-wrapper {
@@ -697,7 +697,7 @@ function injectStyles() {
         .menu-divider {
             display: none !important;
             width: 1px !important;
-            height: 18px !important;
+            height: 16px !important;
             align-self: center !important;
             background-color: var(--border-popup) !important;
             margin: 0 2px !important;
